@@ -1,0 +1,132 @@
+# This YAML file describes your package. Stack will automatically
+# generate a Cabal file when you run `stack build`. See the hpack
+# website for help with this file: <https://github.com/sol/hpack>.
+name: wavetoy7
+version: '0.0.0'
+github: "eschnett/wavetoy7"
+license: MIT
+author: "Erik Schnetter"
+maintainer: "Erik Schnetter"
+synopsis: wavetoy7 is a Haskell WaveToy implementation
+description: wavetoy7 is a Haskell WaveToy implementation.
+# category: Other
+
+extra-source-files:
+  - CHANGELOG.rst
+  - LICENSE.rst
+  - README.rst
+  - package.yaml
+  - stack.yaml
+
+ghc-options:
+  # - -fconstraint-solver-iterations=10
+  - -funbox-strict-fields
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+  - -Wno-unused-matches
+
+default-extensions:
+  #esoteric - ApplicativeDo
+  - BangPatterns
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveLift
+  - DeriveTraversable
+  #unknown - DerivingStrategies
+  - EmptyCase
+  - ExistentialQuantification
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - InstanceSigs
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - NamedFieldPuns
+  - OverloadedStrings
+  - PatternSynonyms
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TupleSections
+  - TypeApplications
+  - TypeFamilies
+  - TypeFamilyDependencies
+  - TypeOperators
+  # more controversial?
+  - AllowAmbiguousTypes
+  - PackageImports
+  - PolyKinds
+  - TypeInType
+
+library:
+  dependencies:
+    # - QuickCheck
+    - base
+    # - bifunctors
+    - constraints
+    # - data-default
+    # - quickcheck-instances
+    # - validity
+    # - validity-vector
+    # - vector
+    # # - vector-space
+    # - vector-th-unbox
+  source-dirs: lib
+
+executables:
+  wavetoy7:
+    source-dirs: src
+    main: Main.hs
+    dependencies:
+      - base
+      - wavetoy7
+    ghc-options:
+      - -rtsopts
+      - -threaded
+      - -with-rtsopts=-N
+
+benchmarks:
+  wavetoy7-benchmarks:
+    source-dirs: bench
+    main: Main.hs
+    dependencies:
+      - base
+      - criterion
+      - wavetoy7
+    ghc-options:
+      - -rtsopts
+      - -threaded
+      - -with-rtsopts=-N
+
+tests:
+  wavetoy7-test-suite:
+    source-dirs: test
+    main: Main.hs
+    dependencies:
+      - QuickCheck
+      - base
+      # - bifunctors
+      - constraints
+      # - data-default
+      - quickcheck-instances
+      - tasty
+      - tasty-discover
+      # - tasty-hspec
+      - tasty-quickcheck
+      # - vector
+      - wavetoy7
+    ghc-options:
+      - -rtsopts
+      - -threaded
+      - -with-rtsopts=-N
