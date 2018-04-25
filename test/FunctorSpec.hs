@@ -183,3 +183,28 @@ prop_ZipList_Functor_id xs =
 prop_ZipList_Functor_assoc :: Fun B C -> Fun A B -> ZipList A -> Property
 prop_ZipList_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
+
+
+
+newtype NA = NA Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NA where
+    function = functionMap (\(NA x) -> x) NA
+newtype NB = NB Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NB where
+    function = functionMap (\(NB x) -> x) NB
+newtype NC = NC Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NC where
+    function = functionMap (\(NC x) -> x) NC
+
+
+
+prop_NList_Functor_id :: NList NA -> Property
+prop_NList_Functor_id xs =
+    uncurry (===) (getFnEqual law_Functor_id xs)
+
+prop_NList_Functor_assoc :: Fun NB NC -> Fun NA NB -> NList NA -> Property
+prop_NList_Functor_assoc (Fn g) (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Functor_assoc (NFun g) (NFun f)) xs)

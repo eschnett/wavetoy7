@@ -4,6 +4,7 @@ module Functor
     ( Functor(..)
     , law_Functor_id
     , law_Functor_assoc
+    , NList(..)
     ) where
 
 import Prelude hiding ( id, (.), curry, uncurry
@@ -19,6 +20,7 @@ import Data.Functor.Product as F
 import Data.Functor.Sum as F
 import Data.List.NonEmpty
 import Data.Proxy
+import qualified Test.QuickCheck as QC
 
 import Category
 
@@ -136,3 +138,14 @@ instance Functor ZipList where
     type Cod ZipList = Cod []
     proveCod = Sub Dict
     fmap f (ZipList xs) = ZipList (fmap f xs)
+
+
+
+newtype NList a = NList [a]
+    deriving (Eq, Ord, Read, Show, QC.Arbitrary, QC.Arbitrary1)
+
+instance Functor NList where
+    type Dom NList = (-#>)
+    type Cod NList = (->)
+    proveCod = Sub Dict
+    fmap f (NList xs) = NList (fmap (apply f) xs)

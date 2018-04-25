@@ -307,6 +307,26 @@ prop_List_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
+prop_List_Applicative_id' :: Fun NA NB -> [NA] -> Property
+prop_List_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' f xs))
+
+prop_List_Applicative_id_left' :: Fun (NA, NB) NC -> NA -> [NB] -> Property
+prop_List_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
+
+prop_List_Applicative_id_right' ::
+    Fun (NA, NB) NC -> [NA] -> NB -> Property
+prop_List_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
+
+prop_List_Applicative_assoc' ::
+    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
+    Small1 [NA] -> Small1 [NB] -> Small1 [NC] -> Property
+prop_List_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
+
 
 
 prop_NonEmpty_Applicative_id :: NonEmpty A -> Property
@@ -329,6 +349,28 @@ prop_NonEmpty_Applicative_inter :: NonEmpty (Fun A B) -> A -> Property
 prop_NonEmpty_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
+
+prop_NonEmpty_Applicative_id' :: Fun NA NB -> NonEmpty NA -> Property
+prop_NonEmpty_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' f xs))
+
+prop_NonEmpty_Applicative_id_left' ::
+    Fun (NA, NB) NC -> NA -> NonEmpty NB -> Property
+prop_NonEmpty_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
+
+prop_NonEmpty_Applicative_id_right' ::
+    Fun (NA, NB) NC -> NonEmpty NA -> NB -> Property
+prop_NonEmpty_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
+
+prop_NonEmpty_Applicative_assoc' ::
+    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
+    Small1 (NonEmpty NA) -> Small1 (NonEmpty NB) -> Small1 (NonEmpty NC) ->
+    Property
+prop_NonEmpty_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
 
 
 
@@ -354,3 +396,64 @@ prop_ZipList_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
         (ZipList us, ZipList vs) = getEqual (law_Applicative_inter fs x)
     in take 100 us === take 100 vs
+
+prop_ZipList_Applicative_id' :: Fun NA NB -> ZipList NA -> Property
+prop_ZipList_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' f xs))
+
+prop_ZipList_Applicative_id_left' ::
+    Fun (NA, NB) NC -> NA -> ZipList NB -> Property
+prop_ZipList_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
+
+prop_ZipList_Applicative_id_right' ::
+    Fun (NA, NB) NC -> ZipList NA -> NB -> Property
+prop_ZipList_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
+
+prop_ZipList_Applicative_assoc' ::
+    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
+    Small1 (ZipList NA) -> Small1 (ZipList NB) -> Small1 (ZipList NC) ->
+    Property
+prop_ZipList_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
+
+
+
+newtype NA = NA Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NA where
+    function = functionMap (\(NA x) -> x) NA
+newtype NB = NB Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NB where
+    function = functionMap (\(NB x) -> x) NB
+newtype NC = NC Integer
+    deriving (Eq, Ord, Read, Show, Num, Arbitrary, CoArbitrary)
+instance Function NC where
+    function = functionMap (\(NC x) -> x) NC
+
+
+
+prop_NList_Applicative_id' :: Fun NA NB -> NList NA -> Property
+prop_NList_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' (NFun f) xs))
+
+prop_NList_Applicative_id_left' ::
+    Fun (NA *#* NB) NC -> NA -> NList NB -> Property
+prop_NList_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' (NFun f) x ys))
+
+prop_NList_Applicative_id_right' ::
+    Fun (NA *#* NB) NC -> NList NA -> NB -> Property
+prop_NList_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' (NFun f) xs y))
+
+prop_NList_Applicative_assoc' ::
+    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA *#* (NB *#* NC)) NA ->
+    Small1 (NList NA) -> Small1 (NList NB) -> Small1 (NList NC) -> Property
+prop_NList_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc'
+                             (NFun f) (NFun g) (NFun h) (NFun i) xs ys zs))

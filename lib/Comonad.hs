@@ -8,6 +8,7 @@ module Comonad
 import Prelude hiding ( id, (.), curry, uncurry
                       , Functor(..)
                       )
+
 import Data.Functor.Identity
 import Data.Functor.Product as F
 import Data.Functor.Sum as F

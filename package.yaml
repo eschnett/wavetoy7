@@ -71,7 +71,7 @@ default-extensions:
 
 library:
   dependencies:
-    # - QuickCheck
+    - QuickCheck
     - base
     # - bifunctors
     - constraints

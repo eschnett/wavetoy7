@@ -8,6 +8,7 @@ import Prelude hiding ( id, (.), curry, uncurry
                       , Functor(..)
                       )
 import qualified Prelude
+
 import Data.Constraint
 import Data.Functor.Classes
 import Data.Functor.Identity
@@ -119,8 +120,9 @@ prop_Sum_Comonad_duplicate :: Sum FB FA A -> Property
 prop_Sum_Comonad_duplicate xs =
     uncurry (===) (getFnEqual law_Comonad_duplicate xs)
 
-prop_Sum_Comonad_extend :: Fun (Sum FB FA A) B -> Sum FB FA A -> Property
-prop_Sum_Comonad_extend (Fn f) xs =
+prop_Sum_Comonad_extend ::
+    Fun (Sum FB FA A) B -> Small1 (Sum FB FA A) -> Property
+prop_Sum_Comonad_extend (Fn f) (Small1 xs) =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
 
 
@@ -134,8 +136,8 @@ prop_Product_Comonad_duplicate xs =
     uncurry (===) (getFnEqual law_Comonad_duplicate xs)
 
 prop_Product_Comonad_extend ::
-    Fun (Product FB FA A) B -> Product FB FA A -> Property
-prop_Product_Comonad_extend (Fn f) xs =
+    Fun (Product FB FA A) B -> Small1 (Product FB FA A) -> Property
+prop_Product_Comonad_extend (Fn f) (Small1 xs) =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
 
 

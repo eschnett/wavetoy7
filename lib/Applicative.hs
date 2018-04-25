@@ -6,6 +6,10 @@ module Applicative
     , law_Applicative_comp
     , law_Applicative_homo
     , law_Applicative_inter
+    , law_Applicative_id'
+    , law_Applicative_id_left'
+    , law_Applicative_id_right'
+    , law_Applicative_assoc'
     , (<$>)
     , ZipList(..)
     ) where
@@ -96,6 +100,109 @@ law_Applicative_inter :: (Applicative f, Dom f ~ Cod f, Cod f ~ (->))
                          => f (Dom f a b) -> a -> Equal (f b)
 law_Applicative_inter fs x = (fs <*> pure x) `equal` (pure ($ x) <*> fs)
 
+-- f :: a -> b
+-- x :: a
+-- liftA2' (\((), x) -> f x) (pure (), xs) = fmap f xs
+law_Applicative_id' :: forall f a b k p u l q.
+                       ( Applicative f
+                       , Cartesian (Dom f), Cartesian (Cod f)
+                       , Obj (Dom f) a, Obj (Dom f) b
+                       , Cod f ~ (->)
+                       , k ~ Dom f, p ~ Prod k, u ~ Unit p
+                       , l ~ Cod f, q ~ Prod l
+                       ) => a `k` b -> f a -> Equal (f b)
+law_Applicative_id' f xs =
+    liftA2' f' xs' `equal` fmap f xs
+    where
+      f' :: p u a `k` b
+      f' = unapply (\p -> let (_, x) = unprod p in f `apply` x)
+           \\ (proveCartesian @k :: (Obj k u, Obj k a) :- Obj k (p u a))
+      xs' :: q (f u) (f a)
+      xs' = prod (pure (punit @p), xs)
+
+-- f :: (a, b) -> c
+-- x :: a
+-- ys :: f b
+-- liftA2' f (pure x, ys) = fmap (\x -> f (x, y)) ys
+law_Applicative_id_left' ::
+    forall f a b c k p.
+       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
+       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
+       , Cod f ~ (->)
+       , k ~ Dom f, p ~ Prod k
+       ) => p a b `k` c -> a -> f b -> Equal (f c)
+law_Applicative_id_left' f x ys =
+    liftA2' f (prod (pure x, ys)) `equal`
+    fmap (unapply (\y -> f `apply` prod (x, y))) ys
+       \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+
+-- liftA2' f (xs, pure y) = fmap (\y -> f (x, y)) xs
+-- f :: (a, b) -> c
+-- xs :: f a
+-- y :: b
+law_Applicative_id_right' ::
+    forall f a b c k p.
+       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
+       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
+       , Cod f ~ (->)
+       , k ~ Dom f, p ~ Prod k
+       ) => p a b `k` c -> f a -> b -> Equal (f c)
+law_Applicative_id_right' f xs y =
+    liftA2' f (prod (xs, pure y)) `equal`
+    fmap (unapply (\x -> f `apply` prod (x, y))) xs
+       \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+
+-- f :: a -> a'
+-- g :: b -> b'
+-- h :: c -> c'
+-- i :: (a', (b', c')) -> d
+-- liftA2' hi (liftA2' fg (xs, ys), zs) = liftA2' fi (xs, liftA2' gh (ys, zs))
+law_Applicative_assoc' ::
+    forall f a a' b b' c c' d k p.
+       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
+       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c, Obj (Dom f) d
+       , Obj (Dom f) a', Obj (Dom f) b', Obj (Dom f) c'
+       , Cod f ~ (->)
+       , k ~ Dom f, p ~ Prod k
+       ) => a `k` a' -> b `k` b' -> c `k` c' -> (p a' (p b' c')) `k` d ->
+            f a -> f b -> f c -> Equal (f d)
+law_Applicative_assoc' f g h i xs ys zs =
+    liftA2' hi (liftA2' fg (xs, ys), zs) `equal`
+    liftA2' fi (xs, liftA2' gh (ys, zs))
+       \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+       \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+    where fg :: p a b `k` p a' b'
+          fg = unapply (\p -> let (x, y) = unprod p
+                              in prod (f `apply` x, g `apply` y))
+               \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+               \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+          hi :: p (p a' b') c `k` d
+          hi = unapply (\p -> let (q', z) = unprod p
+                                  (x', y') = unprod q'
+                                  r' = prod (x', prod (y', h `apply` z))
+                              in i `apply` r')
+               \\ (proveCartesian @k ::
+                       (Obj k (p a' b'), Obj k c) :- Obj k (p (p a' b') c))
+               \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+               \\ (proveCartesian @k ::
+                       (Obj k a', Obj k (p b' c')) :- Obj k (p a' (p b' c')))
+               \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+          gh :: p b c `k` p b' c'
+          gh = unapply (\p -> let (y, z) = unprod p
+                              in prod (g `apply` y, h `apply` z))
+               \\ (proveCartesian @k :: (Obj k b, Obj k c) :- Obj k (p b c))
+               \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+          fi :: p a (p b' c') `k` d
+          fi = unapply (\p -> let (x, q') = unprod p
+                                  (y', z') = unprod q'
+                                  r' = prod (f `apply` x, prod (y', z'))
+                              in i `apply` r')
+               \\ (proveCartesian @k ::
+                       (Obj k a, Obj k (p b' c')) :- Obj k (p a (p b' c')))
+               \\ (proveCartesian @k ::
+                       (Obj k a', Obj k (p b' c')) :- Obj k (p a' (p b' c')))
+               \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+
 
 
 infixl 4 <$>
@@ -175,3 +282,9 @@ instance Applicative ZipList where
         in ZipList (f x y : rs)
     liftA2 _ _ _ = ZipList []
     -- liftA2 f (ZipList xs) (ZipList ys) = ZipList (zipWith f xs ys)
+
+instance Applicative NList where
+    pure x = NList [x]
+    (<*>) = undefined
+    liftA2' f (NList xs, NList ys) =
+        NList [f `apply` NProd x y | x <- xs, y <- ys]
