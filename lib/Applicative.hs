@@ -17,13 +17,13 @@ import Prelude hiding ( id, (.), curry, uncurry
 
 import Control.Applicative (ZipList(..))
 import Data.Constraint
-import Data.Functor.Compose
+import Data.Functor.Compose as F
 import Data.Functor.Const
 import Data.Functor.Identity
-import Data.Functor.Product
--- import Data.Monoid hiding ((<>), Sum(..), Product(..))
+import Data.Functor.Product as F
+import Data.List.NonEmpty hiding (repeat)
 import Data.Proxy
-import Data.Semigroup hiding (Sum(..), Product(..))
+import Data.Semigroup
 
 import Category
 import Functor
@@ -127,9 +127,9 @@ instance Applicative ((->) a) where
     pure = const
     liftA2 f fx fy x = f (fx x) (fy x)
 
-instance ( Applicative f, Applicative g, Functor (Product f g)
+instance ( Applicative f, Applicative g, Functor (F.Product f g)
          , Dom f ~ Dom g, Cod f ~ Cod g, Cod f ~ (->)
-         ) => Applicative (Product f g) where
+         ) => Applicative (F.Product f g) where
     pure x = Pair (pure x) (pure x)
     Pair fs1 fs2 <*> Pair xs1 xs2 = Pair (fs1 <*> xs1) (fs2 <*> xs2)
     liftA2 f (Pair xs1 xs2) (Pair ys1 ys2) =
@@ -138,9 +138,9 @@ instance ( Applicative f, Applicative g, Functor (Product f g)
         let (Pair xs1 xs2, Pair ys1 ys2) = unprod p
         in Pair (liftA2' f (prod (xs1, ys1))) (liftA2' f (prod (xs2, ys2)))
 
-instance ( Applicative f, Applicative g, Functor (Compose f g)
+instance ( Applicative f, Applicative g, Functor (F.Compose f g)
          , Dom f ~ Cod g, Cod f ~ (->), Cod g ~ (->)
-         ) => Applicative (Compose f g) where
+         ) => Applicative (F.Compose f g) where
     pure x = Compose (pure (pure x))
     Compose f <*> Compose x = Compose ((<*>) <$> f <*> x)
     liftA2 f (Compose xss) (Compose yss) = Compose (liftA2 (liftA2 f) xss yss)
@@ -160,6 +160,13 @@ instance Applicative Maybe where
 instance Applicative [] where
     pure x = [x]
     liftA2 f xs ys = [f x y | x <- xs, y <- ys]
+
+instance Applicative NonEmpty where
+    pure x = x :| []
+    liftA2 f (x :| xs) (y :| ys) =
+        case liftA2 f (x : xs) (y : ys) of
+          [] -> undefined       -- this cannot happen
+          r : rs -> r :| rs
 
 instance Applicative ZipList where
     pure x = ZipList (repeat x)

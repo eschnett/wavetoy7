@@ -11,11 +11,12 @@ import Prelude hiding ( id, (.), curry, uncurry
 import Control.Applicative (ZipList(..))
 import Data.Constraint
 import Data.Functor.Classes
-import Data.Functor.Compose
+import Data.Functor.Compose as F
 import Data.Functor.Const
 import Data.Functor.Identity
-import Data.Functor.Product
-import Data.Functor.Sum
+import Data.Functor.Product as F
+import Data.Functor.Sum as F
+import Data.List.NonEmpty
 import Data.Proxy
 import Test.QuickCheck
 import Test.QuickCheck.Instances()
@@ -161,6 +162,16 @@ prop_List_Functor_id xs =
 
 prop_List_Functor_assoc :: Fun B C -> Fun A B -> [A] -> Property
 prop_List_Functor_assoc (Fn g) (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
+
+
+
+prop_NonEmpty_Functor_id :: NonEmpty A -> Property
+prop_NonEmpty_Functor_id xs =
+    uncurry (===) (getFnEqual law_Functor_id xs)
+
+prop_NonEmpty_Functor_assoc :: Fun B C -> Fun A B -> NonEmpty A -> Property
+prop_NonEmpty_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 

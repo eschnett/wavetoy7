@@ -12,14 +12,14 @@ import qualified Prelude
 
 import Data.Constraint
 import Data.Functor.Classes
-import Data.Functor.Compose
+import Data.Functor.Compose as F
 import Data.Functor.Const
 import Data.Functor.Identity
-import Data.Functor.Product
--- import Data.Monoid hiding ((<>), Sum(..), Product(..))
-import qualified Data.Monoid as Monoid
+import Data.Functor.Product as F
+import Data.List.NonEmpty hiding (take)
+import Data.Monoid hiding ((<>))
 import Data.Proxy
-import Data.Semigroup hiding (Sum(..), Product(..))
+import Data.Semigroup
 import Test.QuickCheck
 import Test.QuickCheck.Instances()
 import Test.QuickCheck.Poly
@@ -96,7 +96,7 @@ prop_Either_Applicative_inter fs' x =
 
 
 
-newtype M = M (Monoid.Sum Integer)
+newtype M = M (Sum Integer)
     deriving (Eq, Show, Arbitrary)
 instance Semigroup M where
     M x <> M y = M (x <> y)
@@ -187,13 +187,13 @@ instance Applicative FC where
 
 
 
-prop_Product_Applicative_id :: Product FB FA A -> Property
+prop_Product_Applicative_id :: F.Product FB FA A -> Property
 prop_Product_Applicative_id xs =
     uncurry (===) (getEqual (law_Applicative_id xs))
 
 prop_Product_Applicative_comp ::
-    Product FB FA (Fun B C) -> Product FB FA (Fun A B) -> Product FB FA A ->
-    Property
+    F.Product FB FA (Fun B C) -> F.Product FB FA (Fun A B) ->
+    F.Product FB FA A -> Property
 prop_Product_Applicative_comp gs' fs' xs =
     let gs = applyFun <$> gs'
         fs = applyFun <$> fs'
@@ -201,22 +201,23 @@ prop_Product_Applicative_comp gs' fs' xs =
 
 prop_Product_Applicative_homo :: Fun A B -> A -> Property
 prop_Product_Applicative_homo (Fn f) x =
-    uncurry (===) (getEqual (law_Applicative_homo (Proxy @(Product FB FA)) f x))
+    uncurry (===)
+                (getEqual (law_Applicative_homo (Proxy @(F.Product FB FA)) f x))
 
-prop_Product_Applicative_inter :: Product FB FA (Fun A B) -> A -> Property
+prop_Product_Applicative_inter :: F.Product FB FA (Fun A B) -> A -> Property
 prop_Product_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
 
 
-prop_Compose_Applicative_id :: Compose FB FA A -> Property
+prop_Compose_Applicative_id :: F.Compose FB FA A -> Property
 prop_Compose_Applicative_id xs =
     uncurry (===) (getEqual (law_Applicative_id xs))
 
 prop_Compose_Applicative_comp ::
-    Compose FB FA (Fun B C) -> Compose FB FA (Fun A B) -> Compose FB FA A ->
-    Property
+    F.Compose FB FA (Fun B C) -> F.Compose FB FA (Fun A B) ->
+    F.Compose FB FA A -> Property
 prop_Compose_Applicative_comp gs' fs' xs =
     let gs = applyFun <$> gs'
         fs = applyFun <$> fs'
@@ -224,9 +225,10 @@ prop_Compose_Applicative_comp gs' fs' xs =
 
 prop_Compose_Applicative_homo :: Fun A B -> A -> Property
 prop_Compose_Applicative_homo (Fn f) x =
-    uncurry (===) (getEqual (law_Applicative_homo (Proxy @(Compose FB FA)) f x))
+    uncurry (===)
+                (getEqual (law_Applicative_homo (Proxy @(Compose FB FA)) f x))
 
-prop_Compose_Applicative_inter :: Compose FB FA (Fun A B) -> A -> Property
+prop_Compose_Applicative_inter :: F.Compose FB FA (Fun A B) -> A -> Property
 prop_Compose_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
@@ -284,6 +286,7 @@ instance Arbitrary a => Arbitrary (Small1 a) where
     shrink (Small1 x) = Small1 Prelude.<$> shrink x
 
 
+
 prop_List_Applicative_id :: [A] -> Property
 prop_List_Applicative_id xs =
     uncurry (===) (getEqual (law_Applicative_id xs))
@@ -301,6 +304,29 @@ prop_List_Applicative_homo (Fn f) x =
 
 prop_List_Applicative_inter :: [Fun A B] -> A -> Property
 prop_List_Applicative_inter fs' x =
+    let fs = applyFun <$> fs'
+    in uncurry (===) (getEqual (law_Applicative_inter fs x))
+
+
+
+prop_NonEmpty_Applicative_id :: NonEmpty A -> Property
+prop_NonEmpty_Applicative_id xs =
+    uncurry (===) (getEqual (law_Applicative_id xs))
+
+prop_NonEmpty_Applicative_comp ::
+    Small1 (NonEmpty (Fun B C)) -> Small1 (NonEmpty (Fun A B)) ->
+    Small1 (NonEmpty A) -> Property
+prop_NonEmpty_Applicative_comp (Small1 gs') (Small1 fs') (Small1 xs) =
+    let gs = applyFun <$> gs'
+        fs = applyFun <$> fs'
+    in uncurry (===) (getEqual (law_Applicative_comp gs fs xs))
+
+prop_NonEmpty_Applicative_homo :: Fun A B -> A -> Property
+prop_NonEmpty_Applicative_homo (Fn f) x =
+    uncurry (===) (getEqual (law_Applicative_homo (Proxy @NonEmpty) f x))
+
+prop_NonEmpty_Applicative_inter :: NonEmpty (Fun A B) -> A -> Property
+prop_NonEmpty_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 

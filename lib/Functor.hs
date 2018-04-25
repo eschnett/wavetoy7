@@ -12,11 +12,12 @@ import Prelude hiding ( id, (.), curry, uncurry
 
 import Control.Applicative (ZipList(..))
 import Data.Constraint
-import Data.Functor.Compose
+import Data.Functor.Compose as F
 import Data.Functor.Const
 import Data.Functor.Identity
-import Data.Functor.Product
-import Data.Functor.Sum
+import Data.Functor.Product as F
+import Data.Functor.Sum as F
+import Data.List.NonEmpty
 import Data.Proxy
 
 import Category
@@ -81,28 +82,28 @@ instance Functor ((->) a) where
 
 -- TODO: Relax 'Cod f ~ (->)'
 instance (Functor f, Functor g, Dom f ~ Dom g, Cod f ~ Cod g, Cod f ~ (->))
-        => Functor (Sum f g) where
-    type Dom (Sum f g) = Dom f
-    type Cod (Sum f g) = Cod f
+        => Functor (F.Sum f g) where
+    type Dom (F.Sum f g) = Dom f
+    type Cod (F.Sum f g) = Cod f
     proveCod = Sub Dict
-    fmap f (InL xs) = InL (fmap f xs)
-    fmap f (InR ys) = InR (fmap f ys)
+    fmap f (F.InL xs) = F.InL (fmap f xs)
+    fmap f (F.InR ys) = F.InR (fmap f ys)
 
 -- TODO: Relax 'Cod f ~ (->)'
 instance (Functor f, Functor g, Dom f ~ Dom g, Cod f ~ Cod g, Cod f ~ (->))
-        => Functor (Product f g) where
-    type Dom (Product f g) = Dom f
-    type Cod (Product f g) = Cod f
+        => Functor (F.Product f g) where
+    type Dom (F.Product f g) = Dom f
+    type Cod (F.Product f g) = Cod f
     proveCod = Sub Dict
-    fmap f (Pair xs ys) = Pair (fmap f xs) (fmap f ys)
+    fmap f (Pair xs ys) = F.Pair (fmap f xs) (fmap f ys)
 
 -- TODO: Relax 'Cod f ~ (->), Cod g ~ (->)'
 instance (Functor f, Functor g, Dom f ~ Cod g, Cod f ~ (->), Cod g ~ (->))
-        => Functor (Compose f g) where
-    type Dom (Compose f g) = Dom g
-    type Cod (Compose f g) = Cod f
+        => Functor (F.Compose f g) where
+    type Dom (F.Compose f g) = Dom g
+    type Cod (F.Compose f g) = Cod f
     proveCod = Sub Dict
-    fmap f (Compose xss) = Compose (fmap (fmap f) xss)
+    fmap f (F.Compose xss) = F.Compose (fmap (fmap f) xss)
 
 instance Functor (Const a) where
     type Dom (Const a) = (->)
@@ -123,6 +124,12 @@ instance Functor [] where
     proveCod = Sub Dict
     fmap _ [] = []
     fmap f (x:xs) = f x : fmap f xs
+
+instance Functor NonEmpty where
+    type Dom NonEmpty = Dom []
+    type Cod NonEmpty = Cod []
+    proveCod = Sub Dict
+    fmap f (x :| xs) = f x :| fmap f xs
 
 instance Functor ZipList where
     type Dom ZipList = Dom []
