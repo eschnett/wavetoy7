@@ -189,8 +189,7 @@ instance QC.Arbitrary (a, b) => QC.Arbitrary (a *.* b) where
     arbitrary = prod Prelude.<$> QC.arbitrary
     shrink p = prod Prelude.<$> QC.shrink (unprod p)
 instance (QC.CoArbitrary a, QC.CoArbitrary b) => QC.CoArbitrary (a *.* b)
-instance QC.Function (a, b) => QC.Function (a *.* b) where
-    function = QC.functionMap unprod prod
+instance (QC.Function a, QC.Function b) => QC.Function (a *.* b)
 
 instance (Num a, Num b) => Num (a *.* b) where
     NProd x1 x2 + NProd y1 y2 = NProd (x1 + y1) (x2 + y2)
@@ -207,8 +206,7 @@ instance QC.Arbitrary NUnit where
     arbitrary = return NUnit
     shrink NUnit = []
 instance QC.CoArbitrary NUnit
-instance QC.Function NUnit where
-    function = QC.functionMap (const ()) (const NUnit)
+instance QC.Function NUnit
 
 instance Num NUnit where
     NUnit + NUnit = NUnit

@@ -29,6 +29,7 @@ import Unbox
 newtype UA = UA Int
     deriving (Eq, Ord, Read, Show, Arbitrary, CoArbitrary)
 instance Function UA where
+    {-# INLINE function #-}
     function = functionMap (\(UA x) -> x) UA
 derivingUnbox "UA"
     [t| UA -> Int |]
@@ -37,6 +38,7 @@ derivingUnbox "UA"
 newtype UB = UB Double
     deriving (Eq, Ord, Read, Show, Arbitrary, CoArbitrary)
 instance Function UB where
+    {-# INLINE function #-}
     function = functionMap (\(UB x) -> x) UB
 derivingUnbox "UB"
     [t| UB -> Double |]
@@ -45,6 +47,7 @@ derivingUnbox "UB"
 newtype UC = UC Char
     deriving (Eq, Ord, Read, Show, Arbitrary, CoArbitrary)
 instance Function UC where
+    {-# INLINE function #-}
     function = functionMap (\(UC x) -> x) UC
 derivingUnbox "UC"
     [t| UC -> Char |]
@@ -98,6 +101,7 @@ prop_UVector_Functor_assoc (Fn g) (Fn f) (Small1 xs) =
 
 
 type N = 10
+type N' = 5                     -- small
 
 
 
@@ -183,10 +187,9 @@ prop_CNUVector_Applicative_id_right' (Fn f) xs y =
 
 prop_CNUVector_Applicative_assoc' ::
     Fun UA UA -> Fun UB UB -> Fun UC UC -> Fun (UA *#* (UB *#* UC)) UA ->
-    Small1 (CNUVector N UA) -> Small1 (CNUVector N UB) ->
-    Small1 (CNUVector N UC) -> Property
+    CNUVector N' UA -> CNUVector N' UB -> CNUVector N' UC -> Property
 prop_CNUVector_Applicative_assoc'
-        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+        (Fn f) (Fn g) (Fn h) (Fn i) xs ys zs =
     uncurry (===) (getEqual (law_Applicative_assoc'
                                     (UFun f) (UFun g) (UFun h) (UFun i)
                                     xs ys zs))
@@ -248,9 +251,9 @@ prop_CNUVector_Comonad_id_left (Fn f) xs =
     uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
 
 prop_CNUVector_Comonad_assoc ::
-    Fun (CNUVector N UA) UB ->
-    Fun (CNUVector N UB) UC ->
-    Small1 (CNUVector N UA) ->
+    Fun (CNUVector N' UA) UB ->
+    Fun (CNUVector N' UB) UC ->
+    CNUVector N' UA ->
     Property
-prop_CNUVector_Comonad_assoc (Fn f) (Fn g) (Small1 xs) =
+prop_CNUVector_Comonad_assoc (Fn f) (Fn g) xs =
     uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)

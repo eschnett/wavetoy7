@@ -57,8 +57,7 @@ instance QC.Arbitrary (a, b) => QC.Arbitrary (a *#* b) where
     arbitrary = UProd Prelude.<$> QC.arbitrary
     shrink p = UProd Prelude.<$> QC.shrink (getUProd p)
 instance (QC.CoArbitrary a, QC.CoArbitrary b) => QC.CoArbitrary (a *#* b)
-instance QC.Function (a, b) => QC.Function (a *#* b) where
-    function = QC.functionMap getUProd UProd
+instance (QC.Function a, QC.Function b) => QC.Function (a *#* b)
 
 derivingUnbox "UProd"
     [t| forall a b. (Unbox a, Unbox b) => a *#* b -> (a, b) |]
@@ -72,8 +71,7 @@ instance QC.Arbitrary UUnit where
     arbitrary = UUnit Prelude.<$> QC.arbitrary
     shrink _ = UUnit Prelude.<$> QC.shrink ()
 instance QC.CoArbitrary UUnit
-instance QC.Function UUnit where
-    function = QC.functionMap (const ()) UUnit
+instance QC.Function UUnit
 
 derivingUnbox "UUnit"
     [t|  UUnit -> () |]
@@ -111,12 +109,14 @@ instance Functor V.Vector where
     type Dom V.Vector = (->)
     type Cod V.Vector = (->)
     proveCod = Sub Dict
+    {-# INLINE fmap #-}
     fmap = V.map
 
 instance Functor U.Vector where
     type Dom U.Vector = (-#>)
     type Cod U.Vector = (->)
     proveCod = Sub Dict
+    {-# INLINE fmap #-}
     fmap f = U.map (apply f)
 
 instance Foldable V.Vector where
@@ -167,17 +167,30 @@ deriving instance Eq (v a) => Eq (WithSize n v a)
 deriving instance Ord (v a) => Ord (WithSize n v a)
 deriving instance Show (v a) => Show (WithSize n v a)
 
-instance ( QC.Arbitrary a, Foldable v, Unfoldable v, Obj (Dom v) a
-         , KnownNat n
-         ) => QC.Arbitrary (WithSize n v a) where
-    arbitrary = [ WithSize (fromJust (fromList xs))
+-- instance ( QC.Arbitrary a, Foldable v, Unfoldable v, Obj (Dom v) a
+--          , KnownNat n
+--          ) => QC.Arbitrary (WithSize n v a) where
+--     arbitrary = [ WithSize (fromJust (fromList xs))
+--                 | xs <- QC.vector (intVal @n)]
+--     shrink (WithSize xs) = [ WithSize (fromJust (fromList xs'))
+--                            | xs' <- QC.shrink (toList xs)
+--                            , length xs' == intVal @n]
+instance (QC.Arbitrary a, KnownNat n)
+        => QC.Arbitrary (WithSize n V.Vector a) where
+    arbitrary = [ WithSize (V.fromListN (intVal @n) xs)
                 | xs <- QC.vector (intVal @n)]
-    shrink (WithSize xs) = [ WithSize (fromJust (fromList xs'))
-                           | xs' <- QC.shrink (toList xs)
+    shrink (WithSize xs) = [ WithSize (V.fromListN (intVal @n) xs')
+                           | xs' <- QC.shrink (V.toList xs)
+                           , length xs' == intVal @n]
+instance (QC.Arbitrary a, Unbox a, KnownNat n)
+        => QC.Arbitrary (WithSize n U.Vector a) where
+    arbitrary = [ WithSize (U.fromListN (intVal @n) xs)
+                | xs <- QC.vector (intVal @n)]
+    shrink (WithSize xs) = [ WithSize (U.fromListN (intVal @n) xs')
+                           | xs' <- QC.shrink (U.toList xs)
                            , length xs' == intVal @n]
 instance QC.CoArbitrary (v a) => QC.CoArbitrary (WithSize n v a)
-instance QC.Function (v a) => QC.Function (WithSize n v a) where
-    function = QC.functionMap (\(WithSize xs) -> xs) WithSize
+instance QC.Function (v a) => QC.Function (WithSize n v a)
 
 instance (Indexed v, Cod v ~ (->)) => Indexed (WithSize n v) where
     index (WithSize xs) = index xs
@@ -189,6 +202,7 @@ instance (Functor v, Cod v ~ (->)) => Functor (WithSize n v) where
     type Dom (WithSize n v) = Dom v
     type Cod (WithSize n v) = (->)
     proveCod = Sub Dict
+    {-# INLINE fmap #-}
     fmap f (WithSize xs) = WithSize (fmap f xs)
 
 instance (Foldable v, Cod v ~ (->)) => Foldable (WithSize n v) where
@@ -221,7 +235,7 @@ class Functor p => Pointed p where
 class Functor p => Copointed p where
     copoint :: Obj (Dom p) a => p a -> a
 
-data WithPointer v a = WithPointer Int (v a)
+data WithPointer v a = WithPointer !Int !(v a)
                        deriving Generic
 
 deriving instance Eq (v a) => Eq (WithPointer v a)
@@ -237,10 +251,7 @@ instance (QC.Arbitrary (v a), Foldable v, Obj (Dom v) a)
                                 | (i', xs') <- QC.shrink (i, xs)
                                 , i' >= 0 && i' < length xs']
 instance QC.CoArbitrary (v a) => QC.CoArbitrary (WithPointer v a)
-instance QC.Function (v a) => QC.Function (WithPointer v a) where
-    function = QC.functionMap
-               (\(WithPointer i xs) -> (i, xs))
-               (\(i, xs) -> WithPointer i xs)
+instance QC.Function (v a) => QC.Function (WithPointer v a)
 
 instance (Indexed v, Cod v ~ (->)) => Indexed (WithPointer v) where
     index (WithPointer _ xs) i = index xs i
@@ -255,6 +266,7 @@ instance (Functor v, Cod v ~ (->)) => Functor (WithPointer v) where
     type Dom (WithPointer v) = Dom v
     type Cod (WithPointer v) = (->)
     proveCod = Sub Dict
+    {-# INLINE fmap #-}
     fmap f (WithPointer i xs) = WithPointer i (fmap f xs)
 
 instance (Foldable v, Cod v ~ (->)) => Foldable (WithPointer v) where
@@ -287,9 +299,9 @@ type CNUVector (n :: Nat) = WithPointer (WithSize n U.Vector)
 
 instance KnownNat n => Comonad (CNVVector n) where
     extract = copoint
-    extend f (WithPointer i (WithSize xs)) =
+    extend f (WithPointer i xs) =
         WithPointer i (WithSize (V.generate (intVal @n) gen))
-            where gen j = f `apply` WithPointer j (WithSize xs)
+            where gen j = f `apply` WithPointer j xs
 
 instance KnownNat n => Comonad (CNUVector n) where
     extract = copoint
