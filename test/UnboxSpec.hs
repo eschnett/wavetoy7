@@ -206,12 +206,29 @@ prop_CNVVector_Comonad_extend ::
 prop_CNVVector_Comonad_extend (Fn f) xs =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
 
+prop_CNVVector_Comonad_id_right :: CNVVector N A -> Property
+prop_CNVVector_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_CNVVector_Comonad_id_left ::
+    Fun (CNVVector N A) B -> CNVVector N A -> Property
+prop_CNVVector_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_CNVVector_Comonad_assoc ::
+    Fun (CNVVector N A) B ->
+    Fun (CNVVector N B) C ->
+    Small1 (CNVVector N A) ->
+    Property
+prop_CNVVector_Comonad_assoc (Fn f) (Fn g) (Small1 xs) =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)
 
 
--- prop_CNUVector_Comonad_extract :: Fun UA UB -> CNUVector N UA -> Property
--- prop_CNUVector_Comonad_extract (Fn f) xs =
---     uncurry (===) (getFnEqual (law_Comonad_extract (UFun f)) xs)
--- 
+
+prop_CNUVector_Comonad_extract :: Fun UA UB -> CNUVector N UA -> Property
+prop_CNUVector_Comonad_extract (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_extract (UFun f)) xs)
+
 -- prop_CNUVector_Comonad_duplicate :: CNUVector N UA -> Property
 -- prop_CNUVector_Comonad_duplicate xs =
 --     uncurry (===) (getFnEqual law_Comonad_duplicate xs)
@@ -220,3 +237,20 @@ prop_CNVVector_Comonad_extend (Fn f) xs =
 --     Fun (CNUVector N UA) UB -> CNUVector N UA -> Property
 -- prop_CNUVector_Comonad_extend (Fn f) xs =
 --     uncurry (===) (getFnEqual (law_Comonad_extend (UFun f)) xs)
+
+prop_CNUVector_Comonad_id_right :: CNUVector N UA -> Property
+prop_CNUVector_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_CNUVector_Comonad_id_left ::
+    Fun (CNUVector N UA) UB -> CNUVector N UA -> Property
+prop_CNUVector_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_CNUVector_Comonad_assoc ::
+    Fun (CNUVector N UA) UB ->
+    Fun (CNUVector N UB) UC ->
+    Small1 (CNUVector N UA) ->
+    Property
+prop_CNUVector_Comonad_assoc (Fn f) (Fn g) (Small1 xs) =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)

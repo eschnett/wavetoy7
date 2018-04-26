@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 
 module Applicative
     ( Applicative(..)
@@ -35,7 +36,7 @@ import Functor
 
 
 -- | Applicative
-class Functor f => Applicative f where
+class (Functor f, Cartesian (Dom f), Cartesian (Cod f)) => Applicative f where
     {-# MINIMAL pure, ((<*>), liftA2' | liftA2) #-}
     pure :: Obj (Dom f) a => a -> f a
     infixl 4 <*>
@@ -62,10 +63,9 @@ class Functor f => Applicative f where
                    \\ (proveClosed ::
                            (Obj (Dom f) b, Obj (Dom f) c) :-
                            Obj (Dom f) (Dom f b c))
-    liftA2' :: ( Cartesian (Dom f), Cartesian (Cod f)
-               , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
-               ) => Dom f (Prod (Dom f) a b) c ->
-                    Cod f (Prod (Cod f) (f a) (f b)) (f c)
+    liftA2' :: (Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c)
+               => Dom f (Prod (Dom f) a b) c ->
+                  Cod f (Prod (Cod f) (f a) (f b)) (f c)
     default liftA2' :: forall a b c.
                        ( Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
                        , Closed (Dom f), Closed (Cod f)
@@ -105,9 +105,8 @@ law_Applicative_inter fs x = (fs <*> pure x) `equal` (pure ($ x) <*> fs)
 -- liftA2' (\((), x) -> f x) (pure (), xs) = fmap f xs
 law_Applicative_id' :: forall f a b k p u l q.
                        ( Applicative f
-                       , Cartesian (Dom f), Cartesian (Cod f)
-                       , Obj (Dom f) a, Obj (Dom f) b
                        , Cod f ~ (->)
+                       , Obj (Dom f) a, Obj (Dom f) b
                        , k ~ Dom f, p ~ Prod k, u ~ Unit p
                        , l ~ Cod f, q ~ Prod l
                        ) => a `k` b -> f a -> Equal (f b)
@@ -126,9 +125,9 @@ law_Applicative_id' f xs =
 -- liftA2' f (pure x, ys) = fmap (\x -> f (x, y)) ys
 law_Applicative_id_left' ::
     forall f a b c k p.
-       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
-       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
+       ( Applicative f
        , Cod f ~ (->)
+       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
        , k ~ Dom f, p ~ Prod k
        ) => p a b `k` c -> a -> f b -> Equal (f c)
 law_Applicative_id_left' f x ys =
@@ -142,9 +141,9 @@ law_Applicative_id_left' f x ys =
 -- y :: b
 law_Applicative_id_right' ::
     forall f a b c k p.
-       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
-       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
+       ( Applicative f
        , Cod f ~ (->)
+       , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
        , k ~ Dom f, p ~ Prod k
        ) => p a b `k` c -> f a -> b -> Equal (f c)
 law_Applicative_id_right' f xs y =
@@ -159,10 +158,10 @@ law_Applicative_id_right' f xs y =
 -- liftA2' hi (liftA2' fg (xs, ys), zs) = liftA2' fi (xs, liftA2' gh (ys, zs))
 law_Applicative_assoc' ::
     forall f a a' b b' c c' d k p.
-       ( Applicative f, Cartesian (Dom f), Cartesian (Cod f)
+       ( Applicative f
+       , Cod f ~ (->)
        , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c, Obj (Dom f) d
        , Obj (Dom f) a', Obj (Dom f) b', Obj (Dom f) c'
-       , Cod f ~ (->)
        , k ~ Dom f, p ~ Prod k
        ) => a `k` a' -> b `k` b' -> c `k` c' -> (p a' (p b' c')) `k` d ->
             f a -> f b -> f c -> Equal (f d)

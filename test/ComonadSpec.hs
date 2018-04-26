@@ -12,7 +12,7 @@ import qualified Prelude
 import Data.Constraint
 import Data.Functor.Classes
 import Data.Functor.Identity
-import Data.Functor.Product as F
+-- import Data.Functor.Product as F
 import Data.Functor.Sum as F
 import Data.List.NonEmpty
 import Test.QuickCheck
@@ -30,7 +30,8 @@ instance Function a => Function (Identity a) where
 
 instance (CoArbitrary (f a), CoArbitrary (g a)) => CoArbitrary (F.Sum f g a)
 
-instance (CoArbitrary (f a), CoArbitrary (g a)) => CoArbitrary (F.Product f g a)
+-- instance (CoArbitrary (f a), CoArbitrary (g a))
+--     => CoArbitrary (F.Product f g a)
 
 instance (Function (f a), Function (g a)) => Function (F.Sum f g a) where
     function = functionMap p q
@@ -39,10 +40,10 @@ instance (Function (f a), Function (g a)) => Function (F.Sum f g a) where
               q (Left xs) = InL xs
               q (Right xs) = InR xs
 
-instance (Function (f a), Function (g a)) => Function (F.Product f g a) where
-    function = functionMap p q
-        where p (Pair xs ys) = (xs, ys)
-              q (xs, ys) = Pair xs ys
+-- instance (Function (f a), Function (g a)) => Function (F.Product f g a) where
+--     function = functionMap p q
+--         where p (Pair xs ys) = (xs, ys)
+--               q (xs, ys) = Pair xs ys
 
 
 
@@ -58,6 +59,19 @@ prop_Identity_Comonad_extend :: Fun (Identity A) B -> Identity A -> Property
 prop_Identity_Comonad_extend (Fn f) xs =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
 
+prop_Identity_Comonad_id_right :: Identity A -> Property
+prop_Identity_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_Identity_Comonad_id_left :: Fun (Identity A) B -> Identity A -> Property
+prop_Identity_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_Identity_Comonad_assoc ::
+    Fun (Identity A) B -> Fun (Identity B) C -> Identity A -> Property
+prop_Identity_Comonad_assoc (Fn f) (Fn g) xs =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)
+
 
 
 prop_Tuple_Comonad_extract :: Fun A B -> (B, A) -> Property
@@ -71,6 +85,19 @@ prop_Tuple_Comonad_duplicate xs =
 prop_Tuple_Comonad_extend :: Fun (B, A) B -> (B, A) -> Property
 prop_Tuple_Comonad_extend (Fn f) xs =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
+
+prop_Tuple_Comonad_id_right :: (B, A) -> Property
+prop_Tuple_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_Tuple_Comonad_id_left :: Fun (B, A) B -> (B, A) -> Property
+prop_Tuple_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_Tuple_Comonad_assoc ::
+    Fun (B, A) B -> Fun (B, B) C -> (B, A) -> Property
+prop_Tuple_Comonad_assoc (Fn f) (Fn g) xs =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)
 
 
 
@@ -125,20 +152,53 @@ prop_Sum_Comonad_extend ::
 prop_Sum_Comonad_extend (Fn f) (Small1 xs) =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
 
+prop_Sum_Comonad_id_right :: Sum FB FA A -> Property
+prop_Sum_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_Sum_Comonad_id_left :: Fun (Sum FB FA A) B -> Sum FB FA A -> Property
+prop_Sum_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_Sum_Comonad_assoc ::
+    Fun (Sum FB FA A) B ->
+    Fun (Sum FB FA B) C ->
+    Small1 (Sum FB FA A) ->
+    Property
+prop_Sum_Comonad_assoc (Fn f) (Fn g) (Small1 xs) =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)
 
 
-prop_Product_Comonad_extract :: Fun A B -> Product FB FA A -> Property
-prop_Product_Comonad_extract (Fn f) xs =
-    uncurry (===) (getFnEqual (law_Comonad_extract f) xs)
 
-prop_Product_Comonad_duplicate :: Product FB FA A -> Property
-prop_Product_Comonad_duplicate xs =
-    uncurry (===) (getFnEqual law_Comonad_duplicate xs)
-
-prop_Product_Comonad_extend ::
-    Fun (Product FB FA A) B -> Small1 (Product FB FA A) -> Property
-prop_Product_Comonad_extend (Fn f) (Small1 xs) =
-    uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
+-- prop_Product_Comonad_extract :: Fun A B -> Product FB FA A -> Property
+-- prop_Product_Comonad_extract (Fn f) xs =
+--     uncurry (===) (getFnEqual (law_Comonad_extract f) xs)
+-- 
+-- prop_Product_Comonad_duplicate :: Product FB FA A -> Property
+-- prop_Product_Comonad_duplicate xs =
+--     uncurry (===) (getFnEqual law_Comonad_duplicate xs)
+-- 
+-- prop_Product_Comonad_extend ::
+--     Fun (Product FB FA A) B -> Small1 (Product FB FA A) -> Property
+-- prop_Product_Comonad_extend (Fn f) (Small1 xs) =
+--     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
+-- 
+-- prop_Product_Comonad_id_right :: Product FB FA A -> Property
+-- prop_Product_Comonad_id_right xs =
+--     uncurry (===) (getFnEqual law_Comonad_id_right xs)
+-- 
+-- prop_Product_Comonad_id_left ::
+--     Fun (Product FB FA A) B -> Product FB FA A -> Property
+-- prop_Product_Comonad_id_left (Fn f) xs =
+--     uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+-- 
+-- prop_Product_Comonad_assoc ::
+--     Fun (Product FB FA A) B ->
+--     Fun (Product FB FA B) C ->
+--     Product FB FA A ->
+--     Property
+-- prop_Product_Comonad_assoc (Fn f) (Fn g) xs =
+--     uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)
 
 
 
@@ -162,3 +222,16 @@ prop_NonEmpty_Comonad_extend ::
     Fun (NonEmpty A) B -> Small1 (NonEmpty A) -> Property
 prop_NonEmpty_Comonad_extend (Fn f) (Small1 xs) =
     uncurry (===) (getFnEqual (law_Comonad_extend f) xs)
+
+prop_NonEmpty_Comonad_id_right :: NonEmpty A -> Property
+prop_NonEmpty_Comonad_id_right xs =
+    uncurry (===) (getFnEqual law_Comonad_id_right xs)
+
+prop_NonEmpty_Comonad_id_left :: Fun (NonEmpty A) B -> NonEmpty A -> Property
+prop_NonEmpty_Comonad_id_left (Fn f) xs =
+    uncurry (===) (getFnEqual (law_Comonad_id_left f) xs)
+
+prop_NonEmpty_Comonad_assoc ::
+    Fun (NonEmpty A) B -> Fun (NonEmpty B) C -> Small1 (NonEmpty A) -> Property
+prop_NonEmpty_Comonad_assoc (Fn f) (Fn g) (Small1 xs) =
+    uncurry (===) (getFnEqual (law_Comonad_assoc f g) xs)

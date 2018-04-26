@@ -291,8 +291,8 @@ instance KnownNat n => Comonad (CNVVector n) where
         WithPointer i (WithSize (V.generate (intVal @n) gen))
             where gen j = f `apply` WithPointer j (WithSize xs)
 
--- instance KnownNat n => Comonad (CNUVector n) where
---     extract = copoint
---     extend f (WithPointer i (WithSize xs)) =
---         WithPointer i (WithSize (U.generate (intVal @n) gen))
---             where gen j = f `apply` WithPointer j (WithSize xs)
+instance KnownNat n => Comonad (CNUVector n) where
+    extract = copoint
+    extend f (WithPointer i (WithSize xs)) =
+        WithPointer i (WithSize (U.generate (intVal @n) gen))
+            where gen j = f `apply` WithPointer j (WithSize xs)
