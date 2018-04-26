@@ -65,6 +65,7 @@ default-extensions:
   - TypeOperators
   # more controversial?
   - AllowAmbiguousTypes
+  - MonadComprehensions
   - PackageImports
   - PolyKinds
   - TypeInType
@@ -76,12 +77,12 @@ library:
     # - bifunctors
     - constraints
     # - data-default
-    # - quickcheck-instances
+    - quickcheck-instances
     # - validity
     # - validity-vector
-    # - vector
+    - vector
     # # - vector-space
-    # - vector-th-unbox
+    - vector-th-unbox
   source-dirs: lib
 
 executables:
@@ -124,7 +125,8 @@ tests:
       - tasty-discover
       # - tasty-hspec
       - tasty-quickcheck
-      # - vector
+      - vector
+      - vector-th-unbox
       - wavetoy7
     ghc-options:
       - -rtsopts

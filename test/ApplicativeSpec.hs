@@ -24,9 +24,9 @@ import Test.QuickCheck
 import Test.QuickCheck.Instances()
 import Test.QuickCheck.Poly
 
+import Applicative
 import Category
 import Functor
-import Applicative
 
 
 
@@ -307,22 +307,22 @@ prop_List_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
-prop_List_Applicative_id' :: Fun NA NB -> [NA] -> Property
+prop_List_Applicative_id' :: Fun A B -> [A] -> Property
 prop_List_Applicative_id' (Fn f) xs =
     uncurry (===) (getEqual (law_Applicative_id' f xs))
 
-prop_List_Applicative_id_left' :: Fun (NA, NB) NC -> NA -> [NB] -> Property
+prop_List_Applicative_id_left' :: Fun (A, B) C -> A -> [B] -> Property
 prop_List_Applicative_id_left' (Fn f) x ys =
     uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
 
 prop_List_Applicative_id_right' ::
-    Fun (NA, NB) NC -> [NA] -> NB -> Property
+    Fun (A, B) C -> [A] -> B -> Property
 prop_List_Applicative_id_right' (Fn f) xs y =
     uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
 
 prop_List_Applicative_assoc' ::
-    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
-    Small1 [NA] -> Small1 [NB] -> Small1 [NC] -> Property
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Small1 [A] -> Small1 [B] -> Small1 [C] -> Property
 prop_List_Applicative_assoc'
         (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
     uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
@@ -350,23 +350,23 @@ prop_NonEmpty_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
-prop_NonEmpty_Applicative_id' :: Fun NA NB -> NonEmpty NA -> Property
+prop_NonEmpty_Applicative_id' :: Fun A B -> NonEmpty A -> Property
 prop_NonEmpty_Applicative_id' (Fn f) xs =
     uncurry (===) (getEqual (law_Applicative_id' f xs))
 
 prop_NonEmpty_Applicative_id_left' ::
-    Fun (NA, NB) NC -> NA -> NonEmpty NB -> Property
+    Fun (A, B) C -> A -> NonEmpty B -> Property
 prop_NonEmpty_Applicative_id_left' (Fn f) x ys =
     uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
 
 prop_NonEmpty_Applicative_id_right' ::
-    Fun (NA, NB) NC -> NonEmpty NA -> NB -> Property
+    Fun (A, B) C -> NonEmpty A -> B -> Property
 prop_NonEmpty_Applicative_id_right' (Fn f) xs y =
     uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
 
 prop_NonEmpty_Applicative_assoc' ::
-    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
-    Small1 (NonEmpty NA) -> Small1 (NonEmpty NB) -> Small1 (NonEmpty NC) ->
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Small1 (NonEmpty A) -> Small1 (NonEmpty B) -> Small1 (NonEmpty C) ->
     Property
 prop_NonEmpty_Applicative_assoc'
         (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
@@ -389,7 +389,9 @@ prop_ZipList_Applicative_comp (Small1 gs') (Small1 fs') (Small1 xs) =
 
 prop_ZipList_Applicative_homo :: Fun A B -> A -> Property
 prop_ZipList_Applicative_homo (Fn f) x =
-    uncurry (===) (getEqual (law_Applicative_homo (Proxy @[]) f x))
+    let (ZipList us, ZipList vs) =
+            getEqual (law_Applicative_homo (Proxy @ZipList) f x)
+    in take 100 us === take 100 vs
 
 prop_ZipList_Applicative_inter :: ZipList (Fun A B) -> A -> Property
 prop_ZipList_Applicative_inter fs' x =
@@ -397,23 +399,23 @@ prop_ZipList_Applicative_inter fs' x =
         (ZipList us, ZipList vs) = getEqual (law_Applicative_inter fs x)
     in take 100 us === take 100 vs
 
-prop_ZipList_Applicative_id' :: Fun NA NB -> ZipList NA -> Property
+prop_ZipList_Applicative_id' :: Fun A B -> ZipList A -> Property
 prop_ZipList_Applicative_id' (Fn f) xs =
     uncurry (===) (getEqual (law_Applicative_id' f xs))
 
 prop_ZipList_Applicative_id_left' ::
-    Fun (NA, NB) NC -> NA -> ZipList NB -> Property
+    Fun (A, B) C -> A -> ZipList B -> Property
 prop_ZipList_Applicative_id_left' (Fn f) x ys =
     uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
 
 prop_ZipList_Applicative_id_right' ::
-    Fun (NA, NB) NC -> ZipList NA -> NB -> Property
+    Fun (A, B) C -> ZipList A -> B -> Property
 prop_ZipList_Applicative_id_right' (Fn f) xs y =
     uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
 
 prop_ZipList_Applicative_assoc' ::
-    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA, (NB, NC)) NA ->
-    Small1 (ZipList NA) -> Small1 (ZipList NB) -> Small1 (ZipList NC) ->
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Small1 (ZipList A) -> Small1 (ZipList B) -> Small1 (ZipList C) ->
     Property
 prop_ZipList_Applicative_assoc'
         (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
@@ -441,17 +443,17 @@ prop_NList_Applicative_id' (Fn f) xs =
     uncurry (===) (getEqual (law_Applicative_id' (NFun f) xs))
 
 prop_NList_Applicative_id_left' ::
-    Fun (NA *#* NB) NC -> NA -> NList NB -> Property
+    Fun (NA *.* NB) NC -> NA -> NList NB -> Property
 prop_NList_Applicative_id_left' (Fn f) x ys =
     uncurry (===) (getEqual (law_Applicative_id_left' (NFun f) x ys))
 
 prop_NList_Applicative_id_right' ::
-    Fun (NA *#* NB) NC -> NList NA -> NB -> Property
+    Fun (NA *.* NB) NC -> NList NA -> NB -> Property
 prop_NList_Applicative_id_right' (Fn f) xs y =
     uncurry (===) (getEqual (law_Applicative_id_right' (NFun f) xs y))
 
 prop_NList_Applicative_assoc' ::
-    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA *#* (NB *#* NC)) NA ->
+    Fun NA NA -> Fun NB NB -> Fun NC NC -> Fun (NA *.* (NB *.* NC)) NA ->
     Small1 (NList NA) -> Small1 (NList NB) -> Small1 (NList NC) -> Property
 prop_NList_Applicative_assoc'
         (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =

@@ -145,7 +145,7 @@ newtype NList a = NList [a]
     deriving (Eq, Ord, Read, Show, QC.Arbitrary, QC.Arbitrary1)
 
 instance Functor NList where
-    type Dom NList = (-#>)
+    type Dom NList = (-.>)
     type Cod NList = (->)
     proveCod = Sub Dict
     fmap f (NList xs) = NList (fmap (apply f) xs)

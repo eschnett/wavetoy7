@@ -19,9 +19,9 @@ module Category
     , Cocartesian(..)
     , Closed(..)
     , Hask
-    , type (-#>)(..)
-    , type (*#*)(..), NUnit(..)
-    -- , type (+#+)(..), NCounit()
+    , type (-.>)(..)
+    , type (*.*)(..), NUnit(..)
+    -- , type (+.+)(..), NCounit()
     ) where
 
 import Prelude hiding (id, (.), curry, uncurry)
@@ -181,18 +181,18 @@ instance Closed (->) where
 
 
 -- | Num is a category
-newtype (-#>) a b = NFun { unNFun :: (Num a, Num b) => a -> b }
+newtype (-.>) a b = NFun { unNFun :: (Num a, Num b) => a -> b }
 
-data (*#*) a b = NProd a b
+data (*.*) a b = NProd a b
                  deriving (Eq, Ord, Read, Show, Generic)
-instance QC.Arbitrary (a, b) => QC.Arbitrary (a *#* b) where
+instance QC.Arbitrary (a, b) => QC.Arbitrary (a *.* b) where
     arbitrary = prod Prelude.<$> QC.arbitrary
     shrink p = prod Prelude.<$> QC.shrink (unprod p)
-instance (QC.CoArbitrary a, QC.CoArbitrary b) => QC.CoArbitrary (a *#* b)
-instance QC.Function (a, b) => QC.Function (a *#* b) where
+instance (QC.CoArbitrary a, QC.CoArbitrary b) => QC.CoArbitrary (a *.* b)
+instance QC.Function (a, b) => QC.Function (a *.* b) where
     function = QC.functionMap unprod prod
 
-instance (Num a, Num b) => Num (a *#* b) where
+instance (Num a, Num b) => Num (a *.* b) where
     NProd x1 x2 + NProd y1 y2 = NProd (x1 + y1) (x2 + y2)
     NProd x1 x2 * NProd y1 y2 = NProd (x1 * y1) (x2 * y2)
     negate (NProd x y) = NProd (negate x) (negate y)
@@ -218,26 +218,26 @@ instance Num NUnit where
     signum NUnit = NUnit
     fromInteger _ = NUnit
 
-instance Category (-#>) where
-    type Obj (-#>) = Num
+instance Category (-.>) where
+    type Obj (-.>) = Num
     id = NFun id
     NFun g . NFun f = NFun (g . f)
     apply = unNFun
     unapply = NFun
 
-instance CatProd (*#*) where
-    type Unit (*#*) = NUnit
+instance CatProd (*.*) where
+    type Unit (*.*) = NUnit
     punit = NUnit
     prod (a, b) = NProd a b
     unprod (NProd a b) = (a, b)
 
-instance Cartesian (-#>) where
-    type Prod (-#>) = (*#*)
+instance Cartesian (-.>) where
+    type Prod (-.>) = (*.*)
     proveCartesian = Sub Dict
 
--- data (+#+) a b = NLeft a | NRight b
+-- data (+.+) a b = NLeft a | NRight b
 --                  deriving (Eq, Ord, Read, Show)
--- instance (Num a, Num b) => Num (a +#+ b) where
+-- instance (Num a, Num b) => Num (a +.+ b) where
 --     NLeft x + NLeft y = NLeft (x + y)
 --     NRight x + NRight y = NRight (x + y)
 --     NLeft x + _ = NLeft x
@@ -255,13 +255,13 @@ instance Cartesian (-#>) where
 --     fromInteger n = NLeft (fromInteger n)
 -- 
 -- data NCounit
--- instance CatCoprod (+#+) where
---     type Counit (+#+) = NCounit
+-- instance CatCoprod (+.+) where
+--     type Counit (+.+) = NCounit
 --     coprod (Left a) = NLeft a
 --     coprod (Right b) = NRight b
 --     uncoprod (NLeft a) = Left a
 --     uncoprod (NRight b) = Right b
 -- 
--- instance Cocartesian (-#>) where
---     type Coprod (-#>) = (+#+)
+-- instance Cocartesian (-.>) where
+--     type Coprod (-.>) = (+.+)
 --     proveCocartesian = Sub Dict
