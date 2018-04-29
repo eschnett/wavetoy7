@@ -103,7 +103,9 @@ benchmarks:
     main: Main.hs
     dependencies:
       - base
+      - constraints
       - criterion
+      - vector
       - wavetoy7
     ghc-options:
       - -rtsopts
