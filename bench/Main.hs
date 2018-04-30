@@ -107,18 +107,6 @@ vdot' :: forall f k p a.
          => a -> f a -> f a -> a
 vdot' r xs ys = r + sum (liftA2' (unapply (uncurry (+) . unprod)) (xs, ys))
                 \\ (proveCartesian @k :: (Obj k a, Obj k a) :- Obj k (p a a))
--- vdot' r xs ys = r + sum (liftA2' add (xs, ys))
---                    where {-# INLINE add #-}
---                          add :: p a a `k` a
---                          add = unapply (uncurry (+) . unprod)
---                                \\ (proveCartesian @k ::
---                                        (Obj k a, Obj k a) :- Obj k (p a a))
---                          -- add :: (a, a) -> a
---                          -- add (x, y) = x + y
---                          -- add :: (a *#* a) -#> a
---                          -- add = UFun $ \(UProd (x, y)) -> x + y
---                          --       \\ (proveCartesian @k ::
---                          --               (Obj k a, Obj k a) :- Obj k (p a a))
 
 -- bench_vdot1 :: Double -> Double
 -- bench_vdot1 r = let xs :: V.Vector Double
