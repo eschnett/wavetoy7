@@ -40,11 +40,19 @@ prop_Chebyshev_recurrence (NonNegative (Small n)) x =
 
 
 
-prop_Chebyshev_approx :: [Double] -> Property
-prop_Chebyshev_approx cs' =
+newtype Small1 a = Small1 a
+    deriving (Eq, Ord, Read, Show, Prelude.Functor)
+instance Arbitrary a => Arbitrary (Small1 a) where
+    arbitrary = Small1 Prelude.<$> scale (`div` 10) arbitrary
+    shrink (Small1 x) = Small1 Prelude.<$> shrink x
+
+
+
+prop_Chebyshev_approx :: Small1 [Double] -> Property
+prop_Chebyshev_approx (Small1 cs') =
     conjoin (zipWith (approx (1.0e-13 * maxc)) cs fcs)
     where cs = cs' ++ [1]
           maxc = maximum (fmap abs cs)
           n = length cs
           f = chebyshev cs
-          fcs = chebyshevApprox (2 * n) f
+          fcs = chebyshevApprox n f
