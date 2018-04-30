@@ -66,10 +66,12 @@ chebyshevApprox' :: forall f a b.
 chebyshevApprox' np nc f =
     (fromJust . fromList) [coeff i | i <- [0..nc-1]]
     where coeff j = rf ((if j == 0 then 1 else 2) / fi np) *
-                    sum [f (x k) * rf (cheb j k) | k <- [0..np-1]]
+                    sum [f (x k) * rf (c j k) | k <- [0..np-1]]
+          t :: Int -> a
+          t k = pi * (fi k + 0.5) / fi np
           x :: Int -> a
-          x k = cos (pi * (fi k + 0.5) / fi np)
-          cheb :: Int -> Int -> a
-          cheb j k = cos (pi * fi j * (fi k + 0.5) / fi np)
+          x k = cos (t k)
+          c :: Int -> Int -> a
+          c j k = cos (fi j * t k)
           fi = fromIntegral
           rf = realToFrac

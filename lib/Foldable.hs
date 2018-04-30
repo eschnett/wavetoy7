@@ -10,7 +10,8 @@ module Foldable
 import Prelude hiding ( id, (.), curry, uncurry
                       , Functor(..)
                       , Foldable(..)
-                      , concat, concatMap, sum, product, and, or, all, any
+                      , concat, concatMap, sum, product, maximum, minimum
+                      , and, or, all, any
                       )
 
 import Control.Applicative (ZipList(..))
@@ -97,13 +98,19 @@ concatMap f xs = build (\c z -> foldr (\x b -> foldr c b (f x)) z xs)
 product :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k a, Num a) => f a -> a
 product = getProduct . foldMap Product
 
-maximum :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k a, Bounded a, Ord a)
-           => f a -> a
-maximum = getMax . foldMap Max
+-- {-# INLINE maximum #-}
+-- maximum :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k a, Bounded a, Ord a)
+--            => f a -> a
+-- maximum = getMax . foldMap Max
+maximum :: (Foldable f, k ~ Dom f, Obj k a, Bounded a, Ord a) => f a -> a
+maximum = foldr max minBound
 
-minimum :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k a, Bounded a, Ord a)
-           => f a -> a
-minimum = getMin . foldMap Min
+-- {-# INLINE minimum #-}
+-- minimum :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k a, Bounded a, Ord a)
+--            => f a -> a
+-- minimum = getMin . foldMap Min
+minimum :: (Foldable f, k ~ Dom f, Obj k a, Bounded a, Ord a) => f a -> a
+minimum = foldr min maxBound
 
 and :: (Foldable f, Dom f ~ (->), k ~ Dom f, Obj k Bool) => f Bool -> Bool
 and = getAll . foldMap All
