@@ -37,6 +37,7 @@ approx eps x y = counterexample
 
 
 type N = 10
+type N' = 2
 
 type CA = Double
 type CB = Double
@@ -59,16 +60,16 @@ prop_ChebFun_Category_comp_id_right f x' =
     in uncurry (approx eps) (getFnEqual (law_Category_comp_id_right f) x)
     where eps = let (ChebFun cs) = f in eps1 * max 1 (maxabs cs)
 
--- TODO: Make this work!
--- prop_ChebFun_Category_comp_assoc ::
---     ChebFun N CA CC -> ChebFun N CB CA -> ChebFun N CA CB -> CA -> Property
--- prop_ChebFun_Category_comp_assoc h g f x' =
---     let x = mod' x' 2 - 1
---     in uncurry (approx eps) (getFnEqual (law_Category_comp_assoc h g f) x)
---     where eps = let (ChebFun csf) = f
---                     (ChebFun csg) = g
---                     (ChebFun csh) = h
---                 in eps1 * maxabs [maxabs csf, maxabs csg, maxabs csh]
+-- TODO: Make this work for larger N'
+prop_ChebFun_Category_comp_assoc ::
+    ChebFun N' CA CC -> ChebFun N' CB CA -> ChebFun N' CA CB -> CA -> Property
+prop_ChebFun_Category_comp_assoc h g f x' =
+    let x = mod' x' 2 - 1
+    in uncurry (approx eps) (getFnEqual (law_Category_comp_assoc h g f) x)
+    where eps = let (ChebFun csf) = f
+                    (ChebFun csg) = g
+                    (ChebFun csh) = h
+                in eps1 * maxabs csf * maxabs csg * maxabs csh
 
 
 
