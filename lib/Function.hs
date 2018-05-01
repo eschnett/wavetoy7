@@ -14,7 +14,13 @@ import qualified Prelude as P
 
 import Data.Constraint
 import Data.Kind
+import qualified Data.Vector.Unboxed as U ()
 import GHC.Generics
+import GHC.TypeLits
+
+import ChebFun
+import Chebyshev
+import Unbox
 
 
 
@@ -84,8 +90,8 @@ law_MCategory_comp_id_right f = (f .:. MId) `fnEqual` f
 
 -- (h . g) . f = h . (g . f)
 law_MCategory_comp_assoc :: ( Cat m ~ Cat n, Cat n ~ Cat o
-                           , Ok m a b, Ok n b c, Ok o c d
-                           ) => c `o` d -> b `n` c -> a `m` b -> FnEqual a d
+                            , Ok m a b, Ok n b c, Ok o c d
+                            ) => c `o` d -> b `n` c -> a `m` b -> FnEqual a d
 law_MCategory_comp_assoc h g f = ((h .:. g) .:. f) `fnEqual` (h .:. (g .:. f))
 
 
@@ -118,3 +124,15 @@ instance Morphism (-.>) where
 
 instance Discretization (-.>) where
     discretize = NFun
+
+
+
+-- | ChebVal
+instance MCategory ChebVal
+
+instance Morphism (ChebFun n) where
+    type Cat (ChebFun n) = ChebVal
+    chase (ChebFun cs) = chebyshev cs . realToFrac
+
+instance KnownNat n => Discretization (ChebFun n) where
+    discretize = ChebFun . chebyshevApprox (intVal @n)

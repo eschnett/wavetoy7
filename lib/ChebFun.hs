@@ -1,7 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module ChebFun where
+module ChebFun
+    ( ChebVal()
+    , ChebFun(..)
+    , zeroCF, constCF, idCF
+    , ChebProd(..), ChebUnit(..)
+    ) where
 
 import Prelude hiding ( id, (.), curry, uncurry
                       , Functor(..)
@@ -74,7 +79,7 @@ instance (KnownNat n, 2 <= n) => Category (ChebFun n) where
     --         where n = intVal @n
     --               n2 = n ^ (2 :: Int)
     apply (ChebFun cs) = chebyshev cs . realToFrac
-    unapply f = ChebFun (chebyshevApprox (intVal @n) f)
+    unapply = ChebFun . chebyshevApprox (intVal @n)
 
 
 

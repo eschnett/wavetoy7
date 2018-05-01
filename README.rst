@@ -17,16 +17,16 @@ Build instructions
 
 .. code:: sh
 
-    # Build the project.
+    # Build the project:
     stack build
 
-    # Run the test suite.
+    # Run the test suite:
     stack test
 
-    # Run the benchmarks.
+    # Run the benchmarks:
     stack bench
 
-    # Generate documentation.
+    # Generate documentation:
     stack haddock
 
 .. |Build Status| image:: https://travis-ci.org/eschnett/wavetoy7.svg?branch=master
