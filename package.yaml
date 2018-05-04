@@ -123,6 +123,7 @@ tests:
       # - bifunctors
       - constraints
       # - data-default
+      - ghc-proofs
       - quickcheck-instances
       - tasty
       - tasty-discover

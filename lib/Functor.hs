@@ -80,7 +80,8 @@ instance Functor ((->) a) where
     type Dom ((->) a) = (->)
     type Cod ((->) a) = (->)
     proveCod = Sub Dict
-    fmap f fx = \x -> f (fx x)
+    -- fmap f fx = \x -> f (fx x)
+    fmap f fx = f . fx
 
 -- TODO: Relax 'Cod f ~ (->)'
 instance (Functor f, Functor g, Dom f ~ Dom g, Cod f ~ Cod g, Cod f ~ (->))
@@ -124,6 +125,7 @@ instance Functor [] where
     type Dom [] = (->)
     type Cod [] = (->)
     proveCod = Sub Dict
+    {-# INLINE fmap #-}
     fmap _ [] = []
     fmap f (x:xs) = f x : fmap f xs
 
