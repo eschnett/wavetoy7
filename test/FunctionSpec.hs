@@ -2,11 +2,9 @@
 
 module FunctionSpec where
 
-import Data.Fixed
 import Test.QuickCheck
 import Test.QuickCheck.Poly
 
-import ChebFun
 import Function
 
 
