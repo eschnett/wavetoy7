@@ -77,8 +77,9 @@ library:
     # - bifunctors
     - constraints
     # - data-default
+    - ieee754
     - quickcheck-instances
-    # - validity
+    - validity
     # - validity-vector
     - vector
     # # - vector-space

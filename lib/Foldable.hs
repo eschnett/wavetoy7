@@ -24,7 +24,6 @@ import Data.Functor.Sum as F
 import Data.List.NonEmpty hiding (length, toList)
 import Data.Monoid hiding (First(..))
 import Data.Proxy
-import Data.Semigroup
 import GHC.Base (build)
 
 import Category

@@ -16,11 +16,6 @@ import Data.Constraint
 import Data.Kind
 import qualified Data.Vector.Unboxed as U ()
 import GHC.Generics
-import GHC.TypeLits
-
-import ChebFun
-import Chebyshev
-import Unbox
 
 
 
@@ -124,15 +119,3 @@ instance Morphism (-.>) where
 
 instance Discretization (-.>) where
     discretize = NFun
-
-
-
--- | ChebVal
-instance MCategory ChebVal
-
-instance Morphism (ChebFun n) where
-    type Cat (ChebFun n) = ChebVal
-    chase (ChebFun cs) = chebyshev cs . realToFrac
-
-instance KnownNat n => Discretization (ChebFun n) where
-    discretize = ChebFun . chebyshevApprox (intVal @n)

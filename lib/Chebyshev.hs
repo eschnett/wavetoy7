@@ -1,5 +1,8 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Adapted from [math-functions-0.2.1.0] Numeric.Polynomial.Chebyshev
 module Chebyshev ( chebyshev
+                 -- , Floating'(..)
                  , chebyshevApprox
                  , chebyshevApprox'
                  ) where
@@ -9,7 +12,9 @@ import Prelude hiding ( id, (.), curry, uncurry
                       , Foldable(..)
                       )
 
+-- import Data.Fixed
 import Data.Maybe
+-- import Data.Ratio
 
 import Category
 import Foldable
@@ -55,23 +60,43 @@ chebyshev cs' x =
 -- | Approximate a given function via Chebyshev polynomials.
 -- See <http://mathworld.wolfram.com/ChebyshevApproximationFormula.html>.
 chebyshevApprox :: ( Unfoldable v, Obj (Dom v) b
-                   , RealFloat a, Fractional b
+                   , RealFrac a, Floating' a, Fractional b
                    ) => Int -> (a -> b) -> v b
 chebyshevApprox n = chebyshevApprox' (2 * n) n
 
 chebyshevApprox' :: forall f a b.
                     ( Unfoldable f, Obj (Dom f) b
-                    , RealFloat a, Fractional b
+                    , RealFrac a, Floating' a, Fractional b
                     ) => Int -> Int -> (a -> b) -> f b
 chebyshevApprox' np nc f =
     (fromJust . fromList) [coeff i | i <- [0..nc-1]]
     where coeff j = rf ((if j == 0 then 1 else 2) / fi np) *
                     sum [f (x k) * rf (c j k) | k <- [0..np-1]]
           t :: Int -> a
-          t k = pi * (fi k + 0.5) / fi np
+          t k = fi (2 * k + 1) / fi (2 * np)
           x :: Int -> a
-          x k = cos (t k)
+          x k = cospi' (t k)
           c :: Int -> Int -> a
-          c j k = cos (fi j * t k)
+          -- c j k = cos (pi * fi j * t k)
+          c j k = cospi' (u j k)
+          u :: Int -> Int -> a
+          u j k = fi jk / fi (2 * np)
+              where jk = (j * (2 * k + 1)) `mod` (4 * np)
           fi = fromIntegral
           rf = realToFrac
+
+class Floating' a where cospi' :: a -> a
+instance Floating a => Floating' a where cospi' x = cos (pi * x)
+
+-- class Floating' a where
+--     cospi' :: a -> a
+-- 
+-- instance Floating a => Floating' a where
+--     cospi' x = cos (pi * x)
+-- 
+-- instance Integral a => Floating' (Ratio a) where
+--     cospi' x =
+--         let x1 = x `mod'` 2
+--             x2 = if x1 <= 1 then x1 else 2 - x1
+--         in if x2 <= 1/2 then c x2 else - c (1 - x2)
+--         where c y = (1 - 4 * y^2) / (1 + y^2)

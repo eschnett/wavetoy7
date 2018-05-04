@@ -27,10 +27,8 @@ import Prelude hiding ( id, (.), curry, uncurry
 import qualified Prelude
 
 import Data.Constraint
-import Data.Kind
 import Data.Maybe
 import Data.Monoid
-import Data.Proxy
 import qualified Data.Vector as V
 import Data.Vector.Unboxed (Unbox)
 import qualified Data.Vector.Unboxed as U
@@ -45,6 +43,7 @@ import Category
 import Comonad
 import Foldable
 import Functor
+import Sized
 import Unfoldable
 
 
@@ -178,15 +177,6 @@ instance Indexed U.Vector where
     index = (U.!)
 
 
-
--- | Use as 'intVal @n'
-intVal :: forall n. KnownNat n => Int
-intVal = fromInteger (natVal (Proxy @n))
-
-class KnownNat (Size v) => Sized (v :: Type -> Type) where
-    type Size v :: Nat
-    size :: Int
-    size = intVal @(Size v)
 
 newtype WithSize (n :: Nat) v a = WithSize (v a)
     deriving Generic

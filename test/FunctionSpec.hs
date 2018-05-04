@@ -53,32 +53,3 @@ prop_Num_MCategory_comp_assoc ::
 prop_Num_MCategory_comp_assoc (Fn h) (Fn g) (Fn f) x =
     uncurry (===) (getFnEqual (law_MCategory_comp_assoc
                                       (NFun h) (NFun g) (NFun f)) x)
-
-
-
-type N = 5                      -- 10
-
-type CA = Double
-type CB = Double
-type CC = Double
-
-eps1 :: Double
-eps1 = 1.0e-13
-
-
-
-prop_ChebVal_MCategory_comp_id_left :: ChebFun N CA CB -> CA -> Property
-prop_ChebVal_MCategory_comp_id_left f x' =
-    let x = mod' (x' + 1) 2 - 1
-    in uncurry (===) (getFnEqual (law_MCategory_comp_id_left f) x)
-
-prop_ChebVal_MCategory_comp_id_right :: ChebFun N CA CB -> CA -> Property
-prop_ChebVal_MCategory_comp_id_right f x' =
-    let x = mod' (x' + 1) 2 - 1
-    in uncurry (===) (getFnEqual (law_MCategory_comp_id_right f) x)
-
-prop_ChebVal_MCategory_comp_assoc ::
-    ChebFun N CA CC -> ChebFun N CB CA -> ChebFun N CA CB -> CA -> Property
-prop_ChebVal_MCategory_comp_assoc h g f x' =
-    let x = mod' (x' + 1) 2 - 1
-    in uncurry (===) (getFnEqual (law_MCategory_comp_assoc h g f) x)
