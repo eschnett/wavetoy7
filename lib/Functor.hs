@@ -44,7 +44,7 @@ law_Functor_id = fmap id `fnEqual` (id @(Cod f))
 law_Functor_assoc :: forall f a b c.
                      (Functor f, Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c)
                      => Dom f b c -> Dom f a b -> FnEqual (f a) (f c)
-law_Functor_assoc g f = (fmap (g . f) `fnEqual` (fmap g . fmap f))
+law_Functor_assoc g f = fmap (g . f) `fnEqual` (fmap g . fmap f)
                         \\ (proveCod :: Obj (Dom f) a :- Obj (Cod f) (f a))
                         \\ (proveCod :: Obj (Dom f) b :- Obj (Cod f) (f b))
                         \\ (proveCod :: Obj (Dom f) c :- Obj (Cod f) (f c))

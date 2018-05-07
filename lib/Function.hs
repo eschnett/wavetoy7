@@ -7,6 +7,8 @@ module Function
     , law_MCategory_comp_id_right
     , law_MCategory_comp_assoc
     , MFunctor(..)
+    , law_MFunctor_id
+    , law_MFunctor_assoc
     , type (-.>)(..)
     , NList(..)
     ) where
@@ -18,6 +20,7 @@ import Data.Constraint
 import Data.Kind
 import qualified Data.Vector.Unboxed as U ()
 import GHC.Generics
+import qualified Test.QuickCheck as QC
 
 
 
@@ -86,8 +89,6 @@ class MCategory (k :: CatKind) where
     type Obj k :: ObjKind
     type Obj k = k
 
-
-
 -- id . f = f
 law_MCategory_comp_id_left :: Ok m a b => a `m` b -> FnEqual a b
 law_MCategory_comp_id_left f = (MId .:. f) `fnEqual` f
@@ -115,6 +116,24 @@ class ( MCategory (Dom f), MCategory (Cod f)
     fmap :: ( Morphism m, Cat m ~ Dom f, Ok m a b
             , n ~ Mor f
             ) => a `m` b -> f a `n` f b
+
+-- fmap id = id
+law_MFunctor_id :: forall f a. (MFunctor f, Obj (Dom f) a)
+                   => FnEqual (f a) (f a)
+law_MFunctor_id =
+    fmap (MId :: MId (Dom f) a a) `fnEqual` (MId :: MId (Cod f) (f a) (f a))
+       \\ (proveCod :: Obj (Dom f) a :- Obj (Cod f) (f a))
+
+-- fmap (f . g) = fmap f . fmap g
+law_MFunctor_assoc :: forall f m n a b c.
+                     ( MFunctor f
+                     , Cat m ~ Dom f, Cat n ~ Dom f
+                     , Ok m a b, Ok n b c
+                     ) => b `n` c -> a `m` b -> FnEqual (f a) (f c)
+law_MFunctor_assoc g f = fmap (g .:. f) `fnEqual` (fmap g .:. fmap f)
+                         \\ (proveCod :: Obj (Dom f) a :- Obj (Cod f) (f a))
+                         \\ (proveCod :: Obj (Dom f) b :- Obj (Cod f) (f b))
+                         \\ (proveCod :: Obj (Dom f) c :- Obj (Cod f) (f c))
 
 
 
@@ -164,7 +183,7 @@ instance Discretization (-.>) where
     discretize = NFun
 
 newtype NList a = NList { getNList :: [a] }
-    deriving (Eq, Ord, Read, Show, Generic)
+    deriving (Eq, Ord, Read, Show, Generic, QC.Arbitrary, QC.CoArbitrary)
 
 instance MFunctor NList where
     type Dom NList = Num
