@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Function
     ( FnEqual(..), fnEqual, getFnEqual
     , ObjKind
@@ -173,7 +175,8 @@ instance MFunctor ((->) a) where
 instance MCategory Num
 
 newtype (-.>) a b = NFun { getNFun :: a -> b }
-    deriving Generic
+    deriving (Generic, QC.Arbitrary, QC.CoArbitrary)
+instance QC.Function (a -> b) => QC.Function (a -.> b)
 
 instance Morphism (-.>) where
     type Cat (-.>) = Num
