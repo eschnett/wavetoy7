@@ -6,10 +6,12 @@ module Function
     , law_MCategory_comp_id_left
     , law_MCategory_comp_id_right
     , law_MCategory_comp_assoc
+    , MFunctor(..)
     , type (-.>)(..)
+    , NList(..)
     ) where
 
-import Prelude
+import Prelude hiding (Functor(..))
 import qualified Prelude as P
 
 import Data.Constraint
@@ -65,6 +67,17 @@ instance (Morphism m, Morphism n, Cat m ~ Cat n, Obj (Cat m) b)
     type Cat (MComp n m b) = Cat m
     chase (MComp g f) = chase g . chase f
 
+data MComp' k a b where
+    MComp' :: forall m n a b c. (Cat m ~ Cat n, Ok m a b, Ok n b c)
+              => n b c -> m a b -> MComp' (Cat m) a c
+-- deriving instance Eq (MComp' k a b)
+-- deriving instance Ord (MComp' k a b)
+-- deriving instance Show (MComp' k a b)
+
+instance MCategory k => Morphism (MComp' k) where
+    type Cat (MComp' k) = k
+    chase (MComp' g f) = chase g . chase f
+
 
 
 -- | MCategory
@@ -91,6 +104,19 @@ law_MCategory_comp_assoc h g f = ((h .:. g) .:. f) `fnEqual` (h .:. (g .:. f))
 
 
 
+-- | MFunctor
+class ( MCategory (Dom f), MCategory (Cod f)
+      , Morphism (Mor f), Cat (Mor f) ~ Cod f
+      ) => MFunctor (f :: Type -> Type) where
+    type Dom f :: CatKind
+    type Cod f :: CatKind
+    type Mor f :: MorKind
+    proveCod :: Obj (Dom f) a :- Obj (Cod f) (f a)
+    fmap :: ( Morphism m, Cat m ~ Dom f, Ok m a b
+            , n ~ Mor f
+            ) => a `m` b -> f a `n` f b
+
+
 
 -- | Hask
 class Hask a
@@ -104,6 +130,23 @@ instance Morphism (->) where
 
 instance Discretization (->) where
     discretize = id
+
+instance MFunctor [] where
+    type Dom [] = Hask
+    type Cod [] = Hask
+    type Mor [] = (->)
+    proveCod = Sub Dict
+    fmap f [] = []
+    fmap f (x:xs) = f `chase` x : fmap f xs
+
+instance MFunctor ((->) a) where
+    type Dom ((->) a) = Hask
+    type Cod ((->) a) = Hask
+    type Mor ((->) a) = (->)
+    -- type Mor ((->) a) = MComp' Hask
+    proveCod = Sub Dict
+    fmap f g = chase f . chase g
+    -- fmap f g = MComp' f g
 
 
 
@@ -119,3 +162,24 @@ instance Morphism (-.>) where
 
 instance Discretization (-.>) where
     discretize = NFun
+
+newtype NList a = NList { getNList :: [a] }
+    deriving (Eq, Ord, Read, Show, Generic)
+
+instance MFunctor NList where
+    type Dom NList = Num
+    type Cod NList = Hask
+    type Mor NList = (->)
+    proveCod = Sub Dict
+    --- fmap f = discretize go
+    ---     where go (NList []) = NList []
+    ---           go (NList (x:xs)) = NList (f `chase` x :
+    ---                                      getNList (fmap f (NList xs)))
+    fmap f (NList xs) = NList (map (chase f) xs)
+
+instance Num a => MFunctor ((-.>) a) where
+    type Dom ((-.>) a) = Num
+    type Cod ((-.>) a) = Hask
+    type Mor ((-.>) a) = (->)
+    proveCod = Sub Dict
+    fmap f g = discretize (chase f . chase g)
