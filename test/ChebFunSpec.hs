@@ -17,8 +17,8 @@ import Applicative
 import Category
 import ChebFun
 import Foldable
-import qualified Function as F
 import Functor
+import qualified MCategory as M
 import Unbox
 
 
@@ -110,20 +110,20 @@ prop_ChebFun_Applicative_assoc'
 
 prop_ChebVal_MCategory_comp_id_left :: ChebFun V CA CB -> CA -> Property
 prop_ChebVal_MCategory_comp_id_left f' x' =
-    uncurry (===) (F.getFnEqual (F.law_MCategory_comp_id_left f) x)
+    uncurry (===) (M.getFnEqual (M.law_MCategory_comp_id_left f) x)
     where x = limitArg x'
           f = limitFun f'
 
 prop_ChebVal_MCategory_comp_id_right :: ChebFun V CA CB -> CA -> Property
 prop_ChebVal_MCategory_comp_id_right f' x' =
-    uncurry (===) (F.getFnEqual (F.law_MCategory_comp_id_right f) x)
+    uncurry (===) (M.getFnEqual (M.law_MCategory_comp_id_right f) x)
     where x = limitArg x'
           f = limitFun f'
 
 prop_ChebVal_MCategory_comp_assoc ::
     ChebFun V CA CC -> ChebFun V CB CA -> ChebFun V CA CB -> CA -> Property
 prop_ChebVal_MCategory_comp_assoc h' g' f' x' =
-    uncurry (===) (F.getFnEqual (F.law_MCategory_comp_assoc h g f) x)
+    uncurry (===) (M.getFnEqual (M.law_MCategory_comp_assoc h g f) x)
     where x = limitArg x'
           f = limitFun f'
           g = limitFun g'

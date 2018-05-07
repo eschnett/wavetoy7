@@ -25,8 +25,8 @@ import Applicative
 import Category
 import Chebyshev
 import Foldable
-import qualified Function as F
 import Functor
+import qualified MCategory as M
 import Unbox
 import Unfoldable
 
@@ -36,7 +36,7 @@ import Unfoldable
 class (RealFloat a, Obj (Dom v) a) => ChebVal v a
 instance (RealFloat a, Obj (Dom v) a) => ChebVal v a
 
-instance F.MCategory (ChebVal v)
+instance M.MCategory (ChebVal v)
 
 
 
@@ -58,12 +58,12 @@ instance (Applicative v, Cod v ~ (->)) => Applicative (ChebFun v a) where
     liftA2 f (ChebFun xs) (ChebFun ys) = ChebFun (liftA2 f xs ys)
     liftA2' f (ChebFun xs, ChebFun ys) = ChebFun (liftA2' f (xs, ys))
 
-instance Foldable v => F.Morphism (ChebFun v) where
+instance Foldable v => M.Morphism (ChebFun v) where
     type Cat (ChebFun v) = ChebVal v
     chase (ChebFun cs) = chebyshev cs . realToFrac
 
 instance (Foldable v, Sized v, Unfoldable v)
-        => F.Discretization (ChebFun v) where
+        => M.Discretization (ChebFun v) where
     discretize = ChebFun . chebyshevApprox (size @v)
 
 

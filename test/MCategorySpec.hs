@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
-module FunctionSpec where
+module MCategorySpec where
 
 import Test.QuickCheck
 import Test.QuickCheck.Poly
 
-import Function
+import MCategory
 
 
 

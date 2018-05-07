@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Function
+module MCategory
     ( FnEqual(..), fnEqual, getFnEqual
     , ObjKind
     , MorKind, Morphism(..), Discretization(..), Ok, MId(..), MComp(..), (.:.)

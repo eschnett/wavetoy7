@@ -128,6 +128,12 @@ instance Functor [] where
     {-# INLINE fmap #-}
     fmap _ [] = []
     fmap f (x:xs) = f x : fmap f xs
+    -- fmap = fmapFL
+
+-- {-# RULES "fmapFL/id" forall xs . fmapFL (\x -> x) xs = xs #-}
+-- fmapFL :: (a -> b) -> [a] -> [b]
+-- fmapFL _ [] = []
+-- fmapFL f (x:xs) = f x : fmap f xs
 
 instance Functor NonEmpty where
     type Dom NonEmpty = Dom []
