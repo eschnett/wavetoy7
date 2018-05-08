@@ -253,7 +253,8 @@ instance RealFloat (ChebUnit n) where
     
 
 
-instance CatProd (ChebProd n) where
+instance (KnownNat n, 2 <= n) => CatProd (ChebProd n) where
+    type ProdCat (ChebProd n) = ChebFun n
     type Unit (ChebProd n) = ChebUnit n
     punit = ChebUnit ()
     prod = ChebProd

@@ -83,33 +83,59 @@ law_Category_comp_assoc h g f = ((h . g) . f) `fnEqual` (h . (g . f))
 
 -- | Cartesian category
 type ProdKind = Type -> Type -> Type
-class CatProd (p :: ProdKind) where
+class (Cartesian (ProdCat p), Prod (ProdCat p) ~ p)
+        => CatProd (p :: ProdKind) where
+    type ProdCat p :: CatKind
     type Unit p :: Type
     punit :: Unit p
-    prod :: (a, b) -> p a b
-    unprod :: p a b -> (a, b)
-    -- punitLeft :: b -> p (Unit p) b
-    -- punitRight :: a -> p a (Unit p)
-    -- preunitLeft :: p (Unit p) b -> b
-    -- preunitRight :: p a (Unit p) -> a
+    prod :: (k ~ ProdCat p, Obj k a, Obj k b) => (a, b) -> p a b
+    unprod :: (k ~ ProdCat p, Obj k a, Obj k b) => p a b -> (a, b)
+    -- punitLeft :: (k ~ ProdCat p, Obj k b) => b -> p (Unit p) b
     -- punitLeft y = prod (punit, y)
+    -- punitRight :: a -> p a (Unit p)
     -- punitRight x = prod (x, punit)
+    -- preunitLeft :: p (Unit p) b -> b
     -- preunitLeft p = snd (unprod p)
     -- preunitRight p = fst (unprod p)
-    -- passoc :: (Obj k a, Obj k b, Obj k c, p ~ Prod k)
-    --           => p a (p b c) -> p (p a b) c
-    -- preassoc :: (Obj k a, Obj k b, Obj k c, p ~ Prod k)
-    --             => p (p a b) c -> p a (p b c)
-    -- passoc p = let (x, q) = unprod p
-    --                (y, z) = unprod q
-    --            in prod (prod (x, y), z)
-    -- preassoc p = let (q, z) = unprod p
-    --                  (x, y) = unprod q
-    --              in prod (x, prod (y, z))
-class (Category k, CatProd (Prod k), Obj k (Unit (Prod k)))
-        => Cartesian k where
+    -- preunitRight :: p a (Unit p) -> a
+    {-# INLINE passoc #-}
+    passoc :: forall k a b c. (k ~ ProdCat p, Obj k a, Obj k b, Obj k c)
+              => p a (p b c) `k` p (p a b) c
+    passoc = unapply (\p -> let (x, q) = unprod p
+                                (y, z) = unprod q
+                            in prod (prod (x, y), z))
+             \\ (proveCartesian @k ::
+                     (Obj k a, Obj k (p b c)) :- Obj k (p a (p b c)))
+             \\ (proveCartesian @k ::
+                     (Obj k (p a b), Obj k c) :- Obj k (p (p a b) c))
+             \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+             \\ (proveCartesian @k :: (Obj k b, Obj k c) :- Obj k (p b c))
+    {-# INLINE preassoc #-}
+    preassoc :: forall k a b c. (k ~ ProdCat p, Obj k a, Obj k b, Obj k c)
+                => p (p a b) c `k` p a (p b c)
+    preassoc = unapply (\p -> let (q, z) = unprod p
+                                  (x, y) = unprod q
+                              in prod (x, prod (y, z)))
+               \\ (proveCartesian @k ::
+                       (Obj k a, Obj k (p b c)) :- Obj k (p a (p b c)))
+               \\ (proveCartesian @k ::
+                       (Obj k (p a b), Obj k c) :- Obj k (p (p a b) c))
+               \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+               \\ (proveCartesian @k :: (Obj k b, Obj k c) :- Obj k (p b c))
+    {-# INLINE pbimap #-}
+    pbimap :: forall k a b c d.
+              (k ~ ProdCat p, Obj k a, Obj k b, Obj k c, Obj k d)
+              => a `k` c -> b `k` d -> p a b `k` p c d
+    pbimap f g =
+        unapply (\p -> let (x, y) = unprod p in prod (apply f x, apply g y))
+        \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
+        \\ (proveCartesian @k :: (Obj k c, Obj k d) :- Obj k (p c d))
+class ( Category k, CatProd (Prod k), ProdCat (Prod k) ~ k
+      , Obj k (Unit (Prod k))
+       ) => Cartesian k where
     type Prod k :: ProdKind
     proveCartesian :: (Obj k a, Obj k b) :- Obj k (Prod k a b)
+    -- proveCartesian' :: Obj k (Prod k a b) :- (Obj k a, Obj k b)
 
 -- | Cocartesian category
 type CoprodKind = Type -> Type -> Type
@@ -149,15 +175,15 @@ instance Category (->) where
     unapply = Prelude.id
 
 instance CatProd (,) where
+    type ProdCat (,) = (->)
     type Unit (,) = ()
     punit = ()
     prod = id
     unprod = id
-    -- assoc (x, (y, z)) = ((x, y), z)
-    -- reassoc ((x, y), z) = (x, (y, z))
 instance Cartesian (->) where
     type Prod (->) = (,)
     proveCartesian = Sub Dict
+    -- proveCartesian' = Sub Dict
 
 instance CatCoprod Either where
     type Counit Either = Void
@@ -185,7 +211,7 @@ newtype (-.>) a b = NFun { unNFun :: (Num a, Num b) => a -> b }
 
 data (*.*) a b = NProd a b
                  deriving (Eq, Ord, Read, Show, Generic)
-instance QC.Arbitrary (a, b) => QC.Arbitrary (a *.* b) where
+instance (Num a, Num b, QC.Arbitrary (a, b)) => QC.Arbitrary (a *.* b) where
     arbitrary = prod Prelude.<$> QC.arbitrary
     shrink p = prod Prelude.<$> QC.shrink (unprod p)
 instance (QC.CoArbitrary a, QC.CoArbitrary b) => QC.CoArbitrary (a *.* b)
@@ -224,6 +250,7 @@ instance Category (-.>) where
     unapply = NFun
 
 instance CatProd (*.*) where
+    type ProdCat (*.*) = (-.>)
     type Unit (*.*) = NUnit
     punit = NUnit
     prod (a, b) = NProd a b
@@ -232,6 +259,7 @@ instance CatProd (*.*) where
 instance Cartesian (-.>) where
     type Prod (-.>) = (*.*)
     proveCartesian = Sub Dict
+    -- proveCartesian' = undefined
 
 -- data (+.+) a b = NLeft a | NRight b
 --                  deriving (Eq, Ord, Read, Show)

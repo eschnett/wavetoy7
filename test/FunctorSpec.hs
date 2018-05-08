@@ -38,16 +38,14 @@ prop_Proxy_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Proxy_Functor_id :: Obj (Dom Proxy) a => Proxy a -> Proof
-proof_Proxy_Functor_id xs = proof (fmap id xs) (id xs)
--- proof_Proxy_Functor_id xs = uncurry proof (getFnEqual law_Functor_id xs)
+proof_Proxy_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Proxy_Functor_assoc ::
     (Obj (Dom Proxy) a, Obj (Dom Proxy) b, Obj (Dom Proxy) c)
     => (b -> c) -> (a -> b) -> Proxy a -> Proof
 proof_Proxy_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
--- proof_Proxy_Functor_assoc g f xs =
---     uncurry proof (getFnEqual (law_Functor_assoc g f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -60,13 +58,14 @@ prop_Identity_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Identity_Functor_id :: Obj (Dom Identity) a => Identity a -> Proof
-proof_Identity_Functor_id xs = proof (fmap id xs) (id xs)
+proof_Identity_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Identity_Functor_assoc ::
     (Obj (Dom Identity) a, Obj (Dom Identity) b, Obj (Dom Identity) c)
     => (b -> c) -> (a -> b) -> Identity a -> Proof
 proof_Identity_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -79,13 +78,14 @@ prop_Either_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Either_Functor_id :: Obj (Dom (Either b)) a => Either b a -> Proof
-proof_Either_Functor_id xs = proof (fmap id xs) (id xs)
+proof_Either_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Either_Functor_assoc ::
     (Obj (Dom (Either d)) a, Obj (Dom (Either d)) b, Obj (Dom (Either d)) c)
     => (b -> c) -> (a -> b) -> Either d a -> Proof
 proof_Either_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -98,13 +98,14 @@ prop_Tuple_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Tuple_Functor_id :: Obj (Dom ((,) b)) a => (b, a) -> Proof
-proof_Tuple_Functor_id xs = proof (fmap id xs) (id xs)
+proof_Tuple_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Tuple_Functor_assoc ::
     (Obj (Dom ((,) d)) a, Obj (Dom ((,) d)) b, Obj (Dom ((,) d)) c)
     => (b -> c) -> (a -> b) -> (d, a) -> Proof
 proof_Tuple_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -122,13 +123,14 @@ prop_Function_Functor_assoc (Fn g) (Fn f) (Fn xs) (NonEmpty bs) =
 -- proof_Function_Functor_id :: (B -> A) -> Proof
 -- proof_Function_Functor_id xs = proof (fmap id xs) (id xs)
 proof_Function_Functor_id :: Obj (Dom ((->) b)) a => (b -> a) -> b -> Proof
-proof_Function_Functor_id xs y = proof (fmap id xs y) (id xs y)
+proof_Function_Functor_id xs y =
+    proof (u y) (v y) where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Function_Functor_assoc ::
     (Obj (Dom ((->) d)) a, Obj (Dom ((->) d)) b, Obj (Dom ((->) d)) c)
     => (b -> c) -> (a -> b) -> (d -> a) -> Proof
 proof_Function_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -225,13 +227,14 @@ prop_Const_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Const_Functor_id :: Obj (Dom (Const b)) a => Const b a -> Proof
-proof_Const_Functor_id xs = proof (fmap id xs) (id xs)
+proof_Const_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Const_Functor_assoc ::
     (Obj (Dom (Const d)) a, Obj (Dom (Const d)) b, Obj (Dom (Const d)) c)
     => (b -> c) -> (a -> b) -> Const d a -> Proof
 proof_Const_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 
@@ -244,13 +247,14 @@ prop_Maybe_Functor_assoc (Fn g) (Fn f) xs =
     uncurry (===) (getFnEqual (law_Functor_assoc g f) xs)
 
 proof_Maybe_Functor_id :: Obj (Dom Maybe) a => Maybe a -> Proof
-proof_Maybe_Functor_id xs = proof (fmap id xs) (id xs)
+proof_Maybe_Functor_id xs =
+    proof u v where (u, v) = getFnEqual law_Functor_id xs
 
 proof_Maybe_Functor_assoc ::
     (Obj (Dom Maybe) a, Obj (Dom Maybe) b, Obj (Dom Maybe) c)
     => (b -> c) -> (a -> b) -> Maybe a -> Proof
 proof_Maybe_Functor_assoc g f xs =
-    proof (fmap (g . f) xs) ((fmap g . fmap f) xs)
+    proof u v where (u, v) = getFnEqual (law_Functor_assoc g f) xs
 
 
 

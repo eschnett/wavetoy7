@@ -35,12 +35,14 @@ class (Category (Dom f), Category (Cod f)) => Functor f where
     fmap :: (Obj (Dom f) a, Obj (Dom f) b) => Dom f a b -> Cod f (f a) (f b)
 
 -- fmap id = id
+{-# INLINE law_Functor_id #-}
 law_Functor_id :: forall f a. (Functor f, Obj (Dom f) a)
                   => FnEqual (f a) (f a)
 law_Functor_id = fmap id `fnEqual` (id @(Cod f))
                  \\ (proveCod :: Obj (Dom f) a :- Obj (Cod f) (f a))
 
 -- fmap (f . g) = fmap f . fmap g
+{-# INLINE law_Functor_assoc #-}
 law_Functor_assoc :: forall f a b c.
                      (Functor f, Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c)
                      => Dom f b c -> Dom f a b -> FnEqual (f a) (f c)

@@ -95,6 +95,7 @@ instance Category (-#>) where
     unapply = UFun
 
 instance CatProd (*#*) where
+    type ProdCat (*#*) = (-#>)
     type Unit (*#*) = UUnit
     {-# INLINE punit #-}
     punit = UUnit ()

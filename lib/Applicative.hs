@@ -77,12 +77,14 @@ class (Functor f, Cartesian (Dom f), Cartesian (Cod f)) => Applicative f where
                 \\ (proveCod :: Obj (Dom f) c :- Obj (Cod f) (f c))
 
 -- identity: pure id <*> v = v
+{-# INLINE law_Applicative_id #-}
 law_Applicative_id :: (Applicative f, Cod f ~ (->)
                       , Obj (Dom f) a, Obj (Dom f) (Dom f a a)
                       ) => f a -> Equal (f a)
 law_Applicative_id xs = (pure id <*> xs) `equal` xs
 
 -- composition: pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
+{-# INLINE law_Applicative_comp #-}
 law_Applicative_comp :: (Applicative f, Dom f ~ Cod f, Cod f ~ (->)
                         , Obj (Dom f) a, Obj (Dom f) b, Obj (Dom f) c
                         ) => f (Dom f b c) -> f (Dom f a b) -> f a ->
@@ -91,11 +93,13 @@ law_Applicative_comp gs fs xs =
     (pure (.) <*> gs <*> fs <*> xs) `equal` (gs <*> (fs <*> xs))
 
 -- homomorphism: pure f <*> pure x = pure (f x)
+{-# INLINE law_Applicative_homo #-}
 law_Applicative_homo :: (Applicative f, Dom f ~ Cod f, Cod f ~ (->))
                         => Proxy f -> Dom f a b -> a -> Equal (f b)
 law_Applicative_homo _ f x = (pure f <*> pure x) `equal` pure (f x)
 
 -- interchange: u <*> pure y = pure ($ y) <*> u
+{-# INLINE law_Applicative_inter #-}
 law_Applicative_inter :: (Applicative f, Dom f ~ Cod f, Cod f ~ (->))
                          => f (Dom f a b) -> a -> Equal (f b)
 law_Applicative_inter fs x = (fs <*> pure x) `equal` (pure ($ x) <*> fs)
@@ -103,6 +107,7 @@ law_Applicative_inter fs x = (fs <*> pure x) `equal` (pure ($ x) <*> fs)
 -- f :: a -> b
 -- x :: a
 -- liftA2' (\((), x) -> f x) (pure (), xs) = fmap f xs
+{-# INLINE law_Applicative_id' #-}
 law_Applicative_id' :: forall f a b k p u l q.
                        ( Applicative f
                        , Cod f ~ (->)
@@ -123,6 +128,7 @@ law_Applicative_id' f xs =
 -- x :: a
 -- ys :: f b
 -- liftA2' f (pure x, ys) = fmap (\x -> f (x, y)) ys
+{-# INLINE law_Applicative_id_left' #-}
 law_Applicative_id_left' ::
     forall f a b c k p.
        ( Applicative f
@@ -139,6 +145,7 @@ law_Applicative_id_left' f x ys =
 -- f :: (a, b) -> c
 -- xs :: f a
 -- y :: b
+{-# INLINE law_Applicative_id_right' #-}
 law_Applicative_id_right' ::
     forall f a b c k p.
        ( Applicative f
@@ -156,6 +163,7 @@ law_Applicative_id_right' f xs y =
 -- h :: c -> c'
 -- i :: (a', (b', c')) -> d
 -- liftA2' hi (liftA2' fg (xs, ys), zs) = liftA2' fi (xs, liftA2' gh (ys, zs))
+{-# INLINE law_Applicative_assoc' #-}
 law_Applicative_assoc' ::
     forall f a a' b b' c c' d k p.
        ( Applicative f
@@ -166,41 +174,35 @@ law_Applicative_assoc' ::
        ) => a `k` a' -> b `k` b' -> c `k` c' -> (p a' (p b' c')) `k` d ->
             f a -> f b -> f c -> Equal (f d)
 law_Applicative_assoc' f g h i xs ys zs =
-    liftA2' hi (liftA2' fg (xs, ys), zs) `equal`
-    liftA2' fi (xs, liftA2' gh (ys, zs))
-       \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
-       \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+    (liftA2' hi (liftA2' fg (xs, ys), zs) `equal`
+     liftA2' fi (xs, liftA2' gh (ys, zs)))
+        \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+        \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
     where fg :: p a b `k` p a' b'
-          fg = unapply (\p -> let (x, y) = unprod p
-                              in prod (f `apply` x, g `apply` y))
-               \\ (proveCartesian @k :: (Obj k a, Obj k b) :- Obj k (p a b))
-               \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+          fg = pbimap f g
           hi :: p (p a' b') c `k` d
-          hi = unapply (\p -> let (q', z) = unprod p
-                                  (x', y') = unprod q'
-                                  r' = prod (x', prod (y', h `apply` z))
-                              in i `apply` r')
+          hi = i . preassoc . pbimap id h
                \\ (proveCartesian @k ::
                        (Obj k (p a' b'), Obj k c) :- Obj k (p (p a' b') c))
-               \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
+               \\ (proveCartesian @k ::
+                       (Obj k (p a' b'), Obj k c') :- Obj k (p (p a' b') c'))
                \\ (proveCartesian @k ::
                        (Obj k a', Obj k (p b' c')) :- Obj k (p a' (p b' c')))
+               \\ (proveCartesian @k :: (Obj k a', Obj k b') :- Obj k (p a' b'))
                \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
           gh :: p b c `k` p b' c'
-          gh = unapply (\p -> let (y, z) = unprod p
-                              in prod (g `apply` y, h `apply` z))
-               \\ (proveCartesian @k :: (Obj k b, Obj k c) :- Obj k (p b c))
-               \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+          gh = pbimap g h
           fi :: p a (p b' c') `k` d
-          fi = unapply (\p -> let (x, q') = unprod p
-                                  (y', z') = unprod q'
-                                  r' = prod (f `apply` x, prod (y', z'))
-                              in i `apply` r')
+          fi = i . pbimap f id
                \\ (proveCartesian @k ::
                        (Obj k a, Obj k (p b' c')) :- Obj k (p a (p b' c')))
                \\ (proveCartesian @k ::
                        (Obj k a', Obj k (p b' c')) :- Obj k (p a' (p b' c')))
                \\ (proveCartesian @k :: (Obj k b', Obj k c') :- Obj k (p b' c'))
+          {-# INLINE fg #-}
+          {-# INLINE hi #-}
+          {-# INLINE gh #-}
+          {-# INLINE fi #-}
 
 
 
@@ -256,6 +258,7 @@ instance ( Applicative f, Applicative g, Functor (F.Compose f g)
 
 instance (Semigroup a, Monoid a) => Applicative (Const a) where
     pure _ = Const mempty
+    {-# INLINE liftA2 #-}
     liftA2 _ (Const a) (Const b) = Const (a <> b)
 
 instance Applicative Maybe where

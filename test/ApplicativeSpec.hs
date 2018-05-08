@@ -1,5 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# OPTIONS_GHC -O -fplugin GHC.Proof.Plugin #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module ApplicativeSpec where
@@ -20,6 +21,7 @@ import Data.List.NonEmpty hiding (take)
 import Data.Monoid hiding ((<>))
 import Data.Proxy
 import Data.Semigroup
+import GHC.Proof hiding ((===))
 import Test.QuickCheck
 import Test.QuickCheck.Instances()
 import Test.QuickCheck.Poly
@@ -50,6 +52,63 @@ prop_Proxy_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
+prop_Proxy_Applicative_id' :: Fun A B -> Proxy A -> Property
+prop_Proxy_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' f xs))
+
+prop_Proxy_Applicative_id_left' :: Fun (A, B) C -> A -> Proxy B -> Property
+prop_Proxy_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
+
+prop_Proxy_Applicative_id_right' :: Fun (A, B) C -> Proxy A -> B -> Property
+prop_Proxy_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
+
+prop_Proxy_Applicative_assoc' ::
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Small1 (Proxy A) -> Small1 (Proxy B) -> Small1 (Proxy C) -> Property
+prop_Proxy_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
+
+proof_Proxy_Applicative_id :: Proxy A -> Proof
+proof_Proxy_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+proof_Proxy_Applicative_comp ::
+    Proxy (Fun B C) -> Proxy (Fun A B) -> Proxy A -> Proof
+proof_Proxy_Applicative_comp gs' fs' xs =
+    proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+                    gs = applyFun <$> gs'
+                    fs = applyFun <$> fs'
+
+proof_Proxy_Applicative_homo :: Fun A B -> A -> Proof
+proof_Proxy_Applicative_homo (Fn f) x =
+    proof u v where (u, v) = getEqual (law_Applicative_homo (Proxy @Proxy) f x)
+
+proof_Proxy_Applicative_inter :: Proxy (Fun A B) -> A -> Proof
+proof_Proxy_Applicative_inter fs' x =
+    proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+                    fs = applyFun <$> fs'
+
+proof_Proxy_Applicative_id' :: Fun A B -> Proxy A -> Proof
+proof_Proxy_Applicative_id' (Fn f) xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id' f xs)
+
+proof_Proxy_Applicative_id_left' :: Fun (A, B) C -> A -> Proxy B -> Proof
+proof_Proxy_Applicative_id_left' (Fn f) x ys =
+    proof u v where (u, v) = getEqual (law_Applicative_id_left' f x ys)
+
+proof_Proxy_Applicative_id_right' :: Fun (A, B) C -> Proxy A -> B -> Proof
+proof_Proxy_Applicative_id_right' (Fn f) xs y =
+    proof u v where (u, v) = getEqual (law_Applicative_id_right' f xs y)
+
+proof_Proxy_Applicative_assoc' ::
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Proxy A -> Proxy B -> Proxy C -> Proof
+proof_Proxy_Applicative_assoc' (Fn f) (Fn g) (Fn h) (Fn i) xs ys zs =
+    proof u v where (u, v) = getEqual (law_Applicative_assoc' f g h i xs ys zs)
+
 
 
 prop_Identity_Applicative_id :: Identity A -> Property
@@ -71,6 +130,27 @@ prop_Identity_Applicative_inter :: Identity (Fun A B) -> A -> Property
 prop_Identity_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
+
+proof_Identity_Applicative_id :: Identity A -> Proof
+proof_Identity_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+proof_Identity_Applicative_comp ::
+    Identity (Fun B C) -> Identity (Fun A B) -> Identity A -> Proof
+proof_Identity_Applicative_comp gs' fs' xs =
+    proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+                    gs = applyFun <$> gs'
+                    fs = applyFun <$> fs'
+
+proof_Identity_Applicative_homo :: Fun A B -> A -> Proof
+proof_Identity_Applicative_homo (Fn f) x =
+    proof u v
+        where (u, v) = getEqual (law_Applicative_homo (Proxy @Identity) f x)
+
+proof_Identity_Applicative_inter :: Identity (Fun A B) -> A -> Proof
+proof_Identity_Applicative_inter fs' x =
+    proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+                    fs = applyFun <$> fs'
 
 
 
@@ -94,9 +174,31 @@ prop_Either_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
+proof_Either_Applicative_id :: Either B A -> Proof
+proof_Either_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+proof_Either_Applicative_comp ::
+    Either B (Fun B C) -> Either B (Fun A B) -> Either B A -> Proof
+proof_Either_Applicative_comp gs' fs' xs =
+    proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+                    gs = applyFun <$> gs'
+                    fs = applyFun <$> fs'
+
+proof_Either_Applicative_homo :: Fun A B -> A -> Proof
+proof_Either_Applicative_homo (Fn f) x =
+    proof u v
+        where (u, v) = getEqual (law_Applicative_homo (Proxy @(Either B)) f x)
+
+proof_Either_Applicative_inter :: Either B (Fun A B) -> A -> Proof
+proof_Either_Applicative_inter fs' x =
+    proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+                    fs = applyFun <$> fs'
 
 
-newtype M = M (Sum Integer)
+
+-- newtype M = M (Sum Integer)
+newtype M = M (Sum Int)
     deriving (Eq, Show, Arbitrary)
 instance Semigroup M where
     M x <> M y = M (x <> y)
@@ -123,6 +225,26 @@ prop_Tuple_Applicative_inter :: (M, Fun A B) -> A -> Property
 prop_Tuple_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
+
+proof_Tuple_Applicative_id :: (M, A) -> Proof
+proof_Tuple_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+proof_Tuple_Applicative_comp :: (M, Fun B C) -> (M, Fun A B) -> (M, A) -> Proof
+proof_Tuple_Applicative_comp gs' fs' xs =
+    proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+                    gs = applyFun <$> gs'
+                    fs = applyFun <$> fs'
+
+proof_Tuple_Applicative_homo :: Fun A B -> A -> Proof
+proof_Tuple_Applicative_homo (Fn f) x =
+    proof u v
+        where (u, v) = getEqual (law_Applicative_homo (Proxy @((,) M)) f x)
+
+proof_Tuple_Applicative_inter :: (M, Fun A B) -> A -> Proof
+proof_Tuple_Applicative_inter fs' x =
+    proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+                    fs = applyFun <$> fs'
 
 
 
@@ -255,6 +377,64 @@ prop_Const_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
 
+prop_Const_Applicative_id' :: Fun A B -> Const M A -> Property
+prop_Const_Applicative_id' (Fn f) xs =
+    uncurry (===) (getEqual (law_Applicative_id' f xs))
+
+prop_Const_Applicative_id_left' :: Fun (A, B) C -> A -> Const M B -> Property
+prop_Const_Applicative_id_left' (Fn f) x ys =
+    uncurry (===) (getEqual (law_Applicative_id_left' f x ys))
+
+prop_Const_Applicative_id_right' :: Fun (A, B) C -> Const M A -> B -> Property
+prop_Const_Applicative_id_right' (Fn f) xs y =
+    uncurry (===) (getEqual (law_Applicative_id_right' f xs y))
+
+prop_Const_Applicative_assoc' ::
+    Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+    Small1 (Const M A) -> Small1 (Const M B) -> Small1 (Const M C) -> Property
+prop_Const_Applicative_assoc'
+        (Fn f) (Fn g) (Fn h) (Fn i) (Small1 xs) (Small1 ys) (Small1 zs) =
+    uncurry (===) (getEqual (law_Applicative_assoc' f g h i xs ys zs))
+
+proof_Const_Applicative_id :: Const M A -> Proof
+proof_Const_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+-- proof_Const_Applicative_comp ::
+--     Const M (Fun B C) -> Const M (Fun A B) -> Const M A -> Proof
+-- proof_Const_Applicative_comp gs' fs' xs =
+--     proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+--                     gs = applyFun <$> gs'
+--                     fs = applyFun <$> fs'
+
+proof_Const_Applicative_homo :: Fun A B -> A -> Proof
+proof_Const_Applicative_homo (Fn f) x =
+    proof u v
+        where (u, v) = getEqual (law_Applicative_homo (Proxy @(Const M)) f x)
+
+-- proof_Const_Applicative_inter :: Const M (Fun A B) -> A -> Proof
+-- proof_Const_Applicative_inter fs' x =
+--     proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+--                     fs = applyFun <$> fs'
+
+proof_Const_Applicative_id' :: Fun A B -> Const M A -> Proof
+proof_Const_Applicative_id' (Fn f) xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id' f xs)
+
+proof_Const_Applicative_id_left' :: Fun (A, B) C -> A -> Const M B -> Proof
+proof_Const_Applicative_id_left' (Fn f) x ys =
+    proof u v where (u, v) = getEqual (law_Applicative_id_left' f x ys)
+
+proof_Const_Applicative_id_right' :: Fun (A, B) C -> Const M A -> B -> Proof
+proof_Const_Applicative_id_right' (Fn f) xs y =
+    proof u v where (u, v) = getEqual (law_Applicative_id_right' f xs y)
+
+-- proof_Const_Applicative_assoc' ::
+--     Fun A A -> Fun B B -> Fun C C -> Fun (A, (B, C)) A ->
+--     Const M A -> Const M B -> Const M C -> Proof
+-- proof_Const_Applicative_assoc' (Fn f) (Fn g) (Fn h) (Fn i) xs ys zs =
+--     proof u v where (u, v) = getEqual (law_Applicative_assoc' f g h i xs ys zs)
+
 
 
 prop_Maybe_Applicative_id :: Maybe A -> Property
@@ -276,6 +456,27 @@ prop_Maybe_Applicative_inter :: Maybe (Fun A B) -> A -> Property
 prop_Maybe_Applicative_inter fs' x =
     let fs = applyFun <$> fs'
     in uncurry (===) (getEqual (law_Applicative_inter fs x))
+
+proof_Maybe_Applicative_id :: Maybe A -> Proof
+proof_Maybe_Applicative_id xs =
+    proof u v where (u, v) = getEqual (law_Applicative_id xs)
+
+proof_Maybe_Applicative_comp ::
+    Maybe (Fun B C) -> Maybe (Fun A B) -> Maybe A -> Proof
+proof_Maybe_Applicative_comp gs' fs' xs =
+    proof u v where (u, v) = getEqual (law_Applicative_comp gs fs xs)
+                    gs = applyFun <$> gs'
+                    fs = applyFun <$> fs'
+
+proof_Maybe_Applicative_homo :: Fun A B -> A -> Proof
+proof_Maybe_Applicative_homo (Fn f) x =
+    proof u v
+        where (u, v) = getEqual (law_Applicative_homo (Proxy @Maybe) f x)
+
+proof_Maybe_Applicative_inter :: Maybe (Fun A B) -> A -> Proof
+proof_Maybe_Applicative_inter fs' x =
+    proof u v where (u, v) = getEqual (law_Applicative_inter fs x)
+                    fs = applyFun <$> fs'
 
 
 
